@@ -1,0 +1,9 @@
+# Ignore generated files
+*.csv
+*.txt
+*.json
+*.[Bb][Ii][Nn]
+
+# Ignore provided documentation and the task itself
+*.zip
+*.pdf
