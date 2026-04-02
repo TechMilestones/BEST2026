@@ -18,17 +18,17 @@ type GPSData struct {
 type IMUData struct {
 	Instance int
 	TimeUS   int64
-	AccX     float64
-	AccY     float64
-	AccZ     float64
+	AccX     float32
+	AccY     float32
+	AccZ     float32
 }
 
 type ATTData struct {
 	Instance int
 	TimeUS   int64
-	Roll     float64
-	Pitch    float64
-	Yaw      float64
+	Roll     float32
+	Pitch    float32
+	Yaw      float32
 }
 
 type LogData struct {
@@ -38,7 +38,7 @@ type LogData struct {
 }
 
 func Parse(r io.ReadSeeker) (*LogData, error) {
-	parser, err := dataflash.NewParserFromReader(r)
+	parser, err := dataflash.NewParserFromSource(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create parser: %w", err)
 	}
@@ -97,9 +97,9 @@ func Parse(r io.ReadSeeker) (*LogData, error) {
 				data.IMU = append(data.IMU, IMUData{
 					Instance: instance,
 					TimeUS:   timeUs,
-					AccX:     accXRaw.(float64),
-					AccY:     accYRaw.(float64),
-					AccZ:     accZRaw.(float64),
+					AccX:     accXRaw.(float32),
+					AccY:     accYRaw.(float32),
+					AccZ:     accZRaw.(float32),
 				})
 			}
 		case "ATT":
@@ -110,9 +110,9 @@ func Parse(r io.ReadSeeker) (*LogData, error) {
 				data.ATT = append(data.ATT, ATTData{
 					Instance: instance,
 					TimeUS:   timeUs,
-					Roll:     rollRaw.(float64),
-					Pitch:    pitchRaw.(float64),
-					Yaw:      yawRaw.(float64),
+					Roll:     rollRaw.(float32),
+					Pitch:    pitchRaw.(float32),
+					Yaw:      yawRaw.(float32),
 				})
 			}
 		}
