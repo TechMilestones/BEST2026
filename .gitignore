@@ -1,3 +1,4 @@
+
 # Ignore generated files
 *.csv
 *.txt
@@ -7,3 +8,5 @@
 # Ignore provided documentation and the task itself
 *.zip
 *.pdf
+
+!package*.json
