@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from utils import calculate_total_distance, calculate_speeds_from_accel
+
+from calculation_functions import get_cleaned_gps_dataframe, calculate_speeds_from_accel, calculate_total_distance
 from pathlib import Path
 
 data_dir = Path("data")
@@ -12,9 +13,11 @@ for session in flight_sesion_names:
     df_gps_0 = pd.read_csv(data_dir / f'{session}_gps_0.csv')
     df_imu_0 = pd.read_csv(data_dir / f'{session}_imu_0.csv')
     df_imu_1 = pd.read_csv(data_dir / f'{session}_imu_1.csv')
+    
 
+    df_gps_0 = get_cleaned_gps_dataframe(df_gps_0)
     total = calculate_total_distance(df_gps_0)
-    df_with_speeds = calculate_speeds_from_accel(df_imu_0)
+    df_with_speeds = calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att_0)
 
 
     max_h_speed = df_with_speeds['v_horiz'].max()
