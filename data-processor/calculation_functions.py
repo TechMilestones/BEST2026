@@ -47,9 +47,8 @@ def calculate_total_distance(df):
 import numpy as np
 import pandas as pd
 from scipy.signal import butter, filtfilt
-
 def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
-    # 1. СИНХРОНІЗАЦІЯ ТА УСЕРЕДНЕННЯ (Sensor Fusion)
+    # 1. СИНХРОНІЗАЦІЯ ТА УСЕРЕДНЕННЯ
     df_imu = pd.DataFrame({
         'TimeUS': df_imu_0['TimeUS'],
         'AccX': (df_imu_0['AccX'] + df_imu_1['AccX']) / 2.0,
@@ -62,67 +61,81 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
                        on='TimeUS', direction='nearest').reset_index(drop=True)
 
     # 2. ЦИФРОВА ФІЛЬТРАЦІЯ (Butterworth Low-pass)
-    # fs (частота) приблизно 50Гц, cutoff 4Гц - прибираємо вібрації моторів
+    # Прибираємо шум моторів (cutoff 4Hz при частоті ~50Hz)
     try:
         b, a = butter(2, 4/(50/2), btype='low')
         for col in ['AccX', 'AccY', 'AccZ']:
             df[col] = filtfilt(b, a, df[col].fillna(0))
     except:
-        pass # fallback якщо scipy не підтягнувся
+        pass 
 
-    # 3. ПЕРЕХІД В ЗЕМНУ СИСТЕМУ (Coordinate Transformation)
+    # 3. ПЕРЕХІД В ЗЕМНУ СИСТЕМУ КООРДИНАТ
     r = np.radians(df['Roll'].fillna(0))
     p = np.radians(df['Pitch'].fillna(0))
 
-    # Матриця повороту для осей Землі
+    # Рахуємо прискорення в осях Землі (X-North, Y-East, Z-Up)
     ax_e = df['AccX'] * np.cos(p) + df['AccZ'] * np.sin(p)
     ay_e = df['AccX'] * np.sin(p) * np.sin(r) + df['AccY'] * np.cos(r) - df['AccZ'] * np.sin(r) * np.cos(p)
     az_e = -df['AccX'] * np.sin(p) * np.cos(r) + df['AccY'] * np.sin(r) + df['AccZ'] * np.cos(p) * np.cos(r)
 
-    # 4. ВИДАЛЕННЯ БАЙАСУ ТА ГРАВІТАЦІЇ
-    # Беремо початковий стан (спокій)
+    # 4. ВИДАЛЕННЯ БАЙАСУ (Калібровка нуля)
     n_init = min(50, len(df))
     b_x, b_y, b_z = ax_e[:n_init].median(), ay_e[:n_init].median(), az_e[:n_init].median()
 
-    # Чисте прискорення (AC component)
     a_x_pure = ax_e - b_x
     a_y_pure = ay_e - b_y
     a_z_pure = az_e - b_z
 
-    # 5. LONG-TERM DRIFT REMOVAL (High-pass)
-    # Вікно 5 секунд (замість 0.5), щоб не вбити реальний розгін
-    window_long = int(5.0 * 50) # 50 Гц * 5 сек
+    # 5. LONG-TERM DRIFT REMOVAL (High-pass фільтр через Rolling Mean)
+    window_long = int(5.0 * 50) 
     if window_long < len(df):
         a_x_pure -= a_x_pure.rolling(window_long, center=True, min_periods=1).mean()
         a_y_pure -= a_y_pure.rolling(window_long, center=True, min_periods=1).mean()
         a_z_pure -= a_z_pure.rolling(window_long, center=True, min_periods=1).mean()
 
-    # 6. РОЗУМНЕ ІНТЕГРУВАННЯ (Trapezoidal + Adaptive Decay)
+    # 6. ВЕКТОРНЕ ІНТЕГРУВАННЯ (Метод трапецій)
     dt = df['TimeUS'].diff().fillna(0).values / 1_000_000.0
-    v_h, v_v = np.zeros(len(df)), np.zeros(len(df))
+    v_x = np.zeros(len(df))
+    v_y = np.zeros(len(df))
+    v_z = np.zeros(len(df))
     
-    curr_h, curr_v = 0.0, 0.0
-    decay = 0.9999 # "Слабке" затухання для збереження реальної швидкості
-    
-    # Розрахунок горизонтального модуля
-    a_h = np.sqrt(a_x_pure**2 + a_y_pure**2)
+    curr_x, curr_y, curr_z = 0.0, 0.0, 0.0
+    decay = 0.9999 # Коефіцієнт стабілізації
+
+    ax_v, ay_v, az_v = a_x_pure.values, a_y_pure.values, a_z_pure.values
 
     for i in range(1, len(df)):
         if dt[i] <= 0: continue
         
-        # Трапеція
-        curr_h = (curr_h + 0.5 * (a_h[i] + a_h[i-1]) * dt[i]) * decay
-        curr_v = (curr_v + 0.5 * (a_z_pure[i] + a_z_pure[i-1]) * dt[i]) * decay
+        # Інтегруємо кожну вісь окремо для збереження напрямку вектора
+        curr_x = (curr_x + 0.5 * (ax_v[i] + ax_v[i-1]) * dt[i]) * decay
+        curr_y = (curr_y + 0.5 * (ay_v[i] + ay_v[i-1]) * dt[i]) * decay
+        curr_z = (curr_z + 0.5 * (az_v[i] + az_v[i-1]) * dt[i]) * decay
         
-        # ZUPT: якщо прискорення майже нуль — швидкість потроху скидається (як опір повітря)
-        if a_h[i] < 0.05: curr_h *= 0.98 
+        # ZUPT (Zero Velocity Update) - якщо прискорення мізерне, швидкість швидше згасає
+        if abs(ax_v[i]) < 0.05: curr_x *= 0.98
+        if abs(ay_v[i]) < 0.05: curr_y *= 0.98
+        if abs(az_v[i]) < 0.05: curr_z *= 0.98
         
-        v_h[i] = curr_h
-        v_v[i] = curr_v
+        v_x[i] = curr_x
+        v_y[i] = curr_y
+        v_z[i] = curr_z
 
-    # Додаємо результати в DF
-    df['v_horiz'] = v_h
-    df['v_vert'] = np.abs(v_v)
-    df['a_h'] = a_h
+    # 7. ФОРМУВАННЯ РЕЗУЛЬТАТІВ
+    df['v_x'] = v_x
+    df['v_y'] = v_y
+    df['v_z'] = v_z
     
+    # Горизонтальна швидкість (для звіту)
+    df['v_horiz'] = np.sqrt(v_x**2 + v_y**2)
+    
+    # Вертикальна швидкість (абсолютна для звіту)
+    df['v_vert'] = np.abs(v_z)
+    
+    # Повна швидкість (Magnitude) - ідеально для кольору 3D лінії
+    df['v_mag'] = np.sqrt(v_x**2 + v_y**2 + v_z**2)
+    
+    # Тимчасовий стовпчик для фільтрації прискорення у звіті
+    df['a_h'] = np.sqrt(a_x_pure**2 + a_y_pure**2)
+
     return df

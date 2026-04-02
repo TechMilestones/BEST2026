@@ -28,10 +28,9 @@ for session in flight_sesion_names:
 
     max_climb = df_gps_0['Alt'].max() - df_gps_0['Alt'].iloc[0]
 
-
     duration_s = (df_gps_0['TimeUS'].iloc[-1] - df_gps_0['TimeUS'].iloc[0]) / 1_000_000.0
 
-
+    
     print (f" \n --- Результати для сесії {session} ---")
     print(f"Загальна дистанція: {total:.2f} м")
     print(f"Максимальна горизонтальна швидкість: {max_h_speed:.2f} м/с")
