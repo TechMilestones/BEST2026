@@ -8,33 +8,33 @@ import (
 )
 
 type GPSData struct {
-	Instance int
-	TimeUS   int64
-	Lat      float64
-	Lng      float64
-	Alt      float64
+	Instance int     `json:"instance"`
+	TimeUS   int64   `json:"time_us"`
+	Lat      float64 `json:"lat"`
+	Lng      float64 `json:"lng"`
+	Alt      float64 `json:"alt"`
 }
 
 type IMUData struct {
-	Instance int
-	TimeUS   int64
-	AccX     float32
-	AccY     float32
-	AccZ     float32
+	Instance int     `json:"instance"`
+	TimeUS   int64   `json:"time_us"`
+	AccX     float32 `json:"acc_x"`
+	AccY     float32 `json:"acc_y"`
+	AccZ     float32 `json:"acc_z"`
 }
 
 type ATTData struct {
-	Instance int
-	TimeUS   int64
-	Roll     float32
-	Pitch    float32
-	Yaw      float32
+	Instance int     `json:"instance"`
+	TimeUS   int64   `json:"time_us"`
+	Roll     float32 `json:"roll"`
+	Pitch    float32 `json:"pitch"`
+	Yaw      float32 `json:"yaw"`
 }
 
 type LogData struct {
-	GPS []GPSData
-	IMU []IMUData
-	ATT []ATTData
+	GPS []GPSData `json:"gps"`
+	IMU []IMUData `json:"imu"`
+	ATT []ATTData `json:"att"`
 }
 
 func Parse(r io.ReadSeeker) (*LogData, error) {
