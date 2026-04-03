@@ -7,3 +7,4 @@
 # Ignore provided documentation and the task itself
 *.zip
 *.pdf
+data-processor/
