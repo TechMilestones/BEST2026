@@ -12,7 +12,7 @@ def _calculate_step_distances(df):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
     return R * c
 
-def get_cleaned_gps_dataframe(df, speed_limit=100.0):
+def get_cleaned_gps_dataframe(df, speed_limit=60.0, vertical_speed_limit=12.0):
     res = df.copy().reset_index(drop=True)
     
     res.loc[(res['Lat'].abs() < 0.1) | (res['Lng'].abs() < 0.1), ['Lat', 'Lng']] = np.nan
@@ -28,17 +28,39 @@ def get_cleaned_gps_dataframe(df, speed_limit=100.0):
     
     res['Lat'] = res['Lat'].interpolate().ffill().bfill()
     res['Lng'] = res['Lng'].interpolate().ffill().bfill()
+
+    # Remove implausible vertical jumps from GPS altitude and fill gaps.
+    if 'Alt' in res.columns:
+        alt_dt = res['TimeUS'].diff() / 1_000_000.0
+        alt_rate = res['Alt'].diff() / alt_dt
+        res.loc[alt_rate.abs() > vertical_speed_limit, 'Alt'] = np.nan
+        res['Alt'] = res['Alt'].interpolate().ffill().bfill()
     
     return res
 
 def calculate_total_distance(df):
     clean_df = df.copy()
     distances = _calculate_step_distances(clean_df)
-    dt = clean_df['TimeUS'].diff() / 1_000_000.0
-    speeds = (distances / dt).replace([np.inf, -np.inf], np.nan)
-    max_gps_speed = speeds.max()
-    print(f"Max GPS speed: {max_gps_speed}")
     return float(distances.fillna(0).sum())
+
+def calculate_gps_speed_stats(df):
+    clean_df = df.copy()
+    distances = _calculate_step_distances(clean_df)
+    dt = clean_df['TimeUS'].diff() / 1_000_000.0
+    speeds = (distances / dt).replace([np.inf, -np.inf], np.nan).dropna()
+
+    if speeds.empty:
+        return {
+            'max': 0.0,
+            'p95': 0.0,
+            'mean': 0.0,
+        }
+
+    return {
+        'max': float(speeds.max()),
+        'p95': float(np.percentile(speeds, 95)),
+        'mean': float(speeds.mean()),
+    }
 
 
 
@@ -121,6 +143,13 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
         v_y[i] = curr_y
         v_z[i] = curr_z
 
+    # 6.1 Прибираємо повільний дрейф швидкості після інтегрування.
+    window_v = int(3.0 * 50)
+    if window_v < len(df):
+        v_x = v_x - pd.Series(v_x).rolling(window_v, center=True, min_periods=1).mean().values
+        v_y = v_y - pd.Series(v_y).rolling(window_v, center=True, min_periods=1).mean().values
+        v_z = v_z - pd.Series(v_z).rolling(window_v, center=True, min_periods=1).mean().values
+
     # 7. ФОРМУВАННЯ РЕЗУЛЬТАТІВ
     df['v_x'] = v_x
     df['v_y'] = v_y
@@ -139,3 +168,22 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     df['a_h'] = np.sqrt(a_x_pure**2 + a_y_pure**2)
 
     return df
+
+def calculate_imu_speed_stats(df_with_speeds):
+    horiz = df_with_speeds['v_horiz'].dropna()
+    vert = df_with_speeds['v_vert'].dropna()
+
+    if horiz.empty or vert.empty:
+        return {
+            'h_max': 0.0,
+            'h_p99': 0.0,
+            'v_max': 0.0,
+            'v_p99': 0.0,
+        }
+
+    return {
+        'h_max': float(horiz.max()),
+        'h_p99': float(np.percentile(horiz, 99)),
+        'v_max': float(vert.max()),
+        'v_p99': float(np.percentile(vert, 99)),
+    }

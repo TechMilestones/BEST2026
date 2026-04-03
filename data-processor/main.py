@@ -1,7 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from calculation_functions import get_cleaned_gps_dataframe, calculate_speeds_from_accel, calculate_total_distance
+from calculation_functions import (
+    get_cleaned_gps_dataframe,
+    calculate_speeds_from_accel,
+    calculate_imu_speed_stats,
+    calculate_total_distance,
+)
 from pathlib import Path
 
 data_dir = Path("data")
@@ -18,10 +23,10 @@ for session in flight_sesion_names:
     df_gps_0 = get_cleaned_gps_dataframe(df_gps_0)
     total = calculate_total_distance(df_gps_0)
     df_with_speeds = calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att_0)
+    imu_speed_stats = calculate_imu_speed_stats(df_with_speeds)
 
-
-    max_h_speed = df_with_speeds['v_horiz'].max()
-    max_v_speed = df_with_speeds['v_vert'].abs().max()
+    max_h_speed = imu_speed_stats['h_p99']
+    max_v_speed = imu_speed_stats['v_p99']
 
     df_imu_0['acc_magnitude'] = np.sqrt(df_imu_0['AccX']**2 + df_imu_0['AccY']**2 + df_imu_0['AccZ']**2)
     max_acceleration = df_imu_0['acc_magnitude'].max()
@@ -33,8 +38,10 @@ for session in flight_sesion_names:
     
     print (f" \n --- Результати для сесії {session} ---")
     print(f"Загальна дистанція: {total:.2f} м")
-    print(f"Максимальна горизонтальна швидкість: {max_h_speed:.2f} м/с")
-    print(f"Максимальна вертикальна швидкість: {max_v_speed:.2f} м/с")
+    print(f"Максимальна горизонтальна швидкість (IMU, p99): {max_h_speed:.2f} м/с")
+    print(f"Максимальна вертикальна швидкість (IMU, p99): {max_v_speed:.2f} м/с")
     print(f"Максимальне прискорення: {max_acceleration:.2f} м/с²")
     print(f"Максимальний набір висоти: {max_climb:.2f} м")
     print(f"Загальна тривалість польоту: {duration_s:.2f} с")
+    print(f"IMU горизонтальна швидкість (raw max): {imu_speed_stats['h_max']:.2f} м/с")
+    print(f"IMU вертикальна швидкість (raw max): {imu_speed_stats['v_max']:.2f} м/с")
