@@ -10,3 +10,4 @@
 *.pdf
 
 !package*.json
+!tsconfig*.json
