@@ -1,0 +1,15 @@
+.floating-ball {
+    border-radius: 50%;
+    background-color: rgba(75, 85, 99, 0.3);
+
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.floating-ball_icon span {
+    width: 20px;
+    height: 3px;
+    
+}
