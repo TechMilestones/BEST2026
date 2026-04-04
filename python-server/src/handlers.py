@@ -7,6 +7,62 @@ from src.final_calculations_for_3d import final_calculations_for_3d
 from src.metrics_calculation import calculate_metrics
 
 
+def _estimate_sampling_hz(df, time_col="TimeUS"):
+    if df is None or df.empty or time_col not in df.columns:
+        return 0.0
+
+    time_us = pd.to_numeric(df[time_col], errors="coerce").dropna().sort_values()
+    if len(time_us) < 2:
+        return 0.0
+
+    dt_s = time_us.diff().dropna() / 1_000_000.0
+    dt_s = dt_s[dt_s > 0]
+    if dt_s.empty:
+        return 0.0
+
+    return float(1.0 / dt_s.median())
+
+
+def _log_parsing_metadata(df_att, df_imu_0, df_imu_1, df_gps):
+    frequencies = {
+        "gps_hz": _estimate_sampling_hz(df_gps),
+        "att_hz": _estimate_sampling_hz(df_att),
+        "imu_0_hz": _estimate_sampling_hz(df_imu_0),
+        "imu_1_hz": _estimate_sampling_hz(df_imu_1),
+    }
+
+    units = {
+        "TimeUS": "us",
+        "Lat": "degrees",
+        "Lng": "degrees",
+        "Alt": "m",
+        "Roll": "degrees",
+        "Pitch": "degrees",
+        "Yaw": "degrees",
+        "AccX": "m/s^2",
+        "AccY": "m/s^2",
+        "AccZ": "m/s^2",
+    }
+
+    frequencies_table = pd.DataFrame(
+        [
+            {"Signal": "GPS", "Sampling Hz": round(frequencies["gps_hz"], 3)},
+            {"Signal": "ATT", "Sampling Hz": round(frequencies["att_hz"], 3)},
+            {"Signal": "IMU_0", "Sampling Hz": round(frequencies["imu_0_hz"], 3)},
+            {"Signal": "IMU_1", "Sampling Hz": round(frequencies["imu_1_hz"], 3)},
+        ]
+    )
+    units_table = pd.DataFrame(
+        [{"Field": field, "Unit": unit} for field, unit in units.items()]
+    )
+
+    print("\n[PARSING] Sampling frequencies")
+    print(frequencies_table.to_string(index=False))
+
+    print("\n[PARSING] Units")
+    print(units_table.to_string(index=False))
+
+
 def build_dataframes_from_json(json_input):
     if isinstance(json_input, (str, Path)):
         json_path = Path(json_input)
@@ -80,6 +136,7 @@ def dataframe_to_json_records(df):
 def get_all_data(data):
 
     df_att, df_imu_0, df_imu_1, df_gps = build_dataframes_from_json(data)
+    _log_parsing_metadata(df_att, df_imu_0, df_imu_1, df_gps)
 
     visualization_df = final_calculations_for_3d(df_att, df_imu_0, df_imu_1, df_gps)
     visualization_data = dataframe_to_json_records(visualization_df)
