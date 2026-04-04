@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation as R
 from src.calculation_functions import get_cleaned_gps_dataframe, calculate_speeds_from_accel
 
 def get_enu_coordinates(df_gps):
+
     if df_gps.empty: return df_gps
 
     lat_col = 'Lat' if 'Lat' in df_gps.columns else 'lat'

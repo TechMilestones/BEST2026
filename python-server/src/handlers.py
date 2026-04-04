@@ -8,6 +8,11 @@ from src.metrics_calculation import calculate_metrics
 
 
 def _estimate_sampling_hz(df, time_col="TimeUS"):
+    """
+    Estimate sampling frequency (Hz) from a DataFrame by 
+    analyzing the time intervals between consecutive samples.
+    """
+
     if df is None or df.empty or time_col not in df.columns:
         return 0.0
 
