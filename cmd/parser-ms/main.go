@@ -7,10 +7,13 @@ import (
 	"fmt"
 	logparser "hackaton-test/log-parser"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,14 +30,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	// Set the maximum size of the request body to 10 MiB
 	r.ParseMultipartForm(10 << 20)
 
-	queries := r.URL.Query()
-	file_name := queries.Get("file_name")
-	if file_name == "" {
-		JSONErrorResp(w, http.StatusBadRequest, "Error reading file name")
-		return
-	}
-
-	f, _, err := r.FormFile(file_name)
+	f, _, err := r.FormFile("file")
 	if err != nil {
 		JSONErrorResp(w, http.StatusBadRequest, "Error reading file")
 		return
@@ -52,9 +48,20 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	data_reader := bytes.NewReader(data_str)
 
+	pyport := os.Getenv("PYTHON_SERVICE_PORT")
+	if pyport == "" {
+		pyport = "8888"
+	}
+
 	// Call to python server to get full data
-	resp, err := http.Post("http://localhost:8081", "application/json", data_reader)
+	// later there will be env for this
+	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/api/process", pyport), "application/json", data_reader)
 	if err != nil {
+		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
 	}
@@ -72,21 +79,32 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if err := godotenv.Load("ports.env"); err != nil {
+		log.Println("No env file found, using default port 8080")
+	}
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("POST /upload-log", uploadLogHandler)
+	mux.HandleFunc("GET /api/gms/health", healthHandler)
+	mux.HandleFunc("POST /api/upload-log", uploadLogHandler)
 
+	port := os.Getenv("GO_SERVICE_PORT")
+	if port == "" {
+		port = "8080"
+	}
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: mux,
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
+		fmt.Println("Server stopped")
 	}()
+
+	fmt.Println("Server is running on port " + port)
 
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt)

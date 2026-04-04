@@ -8,7 +8,17 @@
 # Ignore provided documentation and the task itself
 *.zip
 *.pdf
+data-processor/
+python-server/src/__pycache__/
 
+# Don't ignore the requirements file
 !package*.json
 !tsconfig*.json
-go-dataflash/
+!requirements.txt
+
+# Implementation with custom interface function
+go-dataflash/ 
+
+.env
+__pycache__/
+.venv/
