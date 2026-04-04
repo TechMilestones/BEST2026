@@ -6,7 +6,7 @@ Available metrics:
 - duration_s: total flight duration in seconds
 - max_acceleration: max magnitude of acceleration from velocity derivatives
 - max_climb: max altitude gain (max(z_m) - min(z_m))
-- total_distance: sum of 3D segment distances
+- total_distance: sum of total distance
 """
 
 from __future__ import annotations

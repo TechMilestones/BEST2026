@@ -133,20 +133,15 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     v_x, v_y, v_z = np.zeros(len(df)), np.zeros(len(df)), np.zeros(len(df))
     
     curr_vx, curr_vy, curr_vz = 0.0, 0.0, 0.0
-    decay = 0.9995 
 
     for i in range(1, len(df)):
         if dt[i] <= 0 or dt[i] > 0.5: continue 
         
 
-        curr_vx = (curr_vx + 0.5 * (a_x_pure[i] + a_x_pure[i-1]) * dt[i]) * decay
-        curr_vy = (curr_vy + 0.5 * (a_y_pure[i] + a_y_pure[i-1]) * dt[i]) * decay
-        curr_vz = (curr_vz + 0.5 * (a_z_pure[i] + a_z_pure[i-1]) * dt[i]) * decay
-        
-  
-        acc_mag = np.sqrt(a_x_pure[i]**2 + a_y_pure[i]**2 + a_z_pure[i]**2)
-        if acc_mag < 0.1:
-            curr_vx *= 0.95; curr_vy *= 0.95; curr_vz *= 0.95
+        # For rocket profiles, avoid artificial damping that suppresses true peak velocity.
+        curr_vx = curr_vx + 0.5 * (a_x_pure[i] + a_x_pure[i-1]) * dt[i]
+        curr_vy = curr_vy + 0.5 * (a_y_pure[i] + a_y_pure[i-1]) * dt[i]
+        curr_vz = curr_vz + 0.5 * (a_z_pure[i] + a_z_pure[i-1]) * dt[i]
         
         v_x[i], v_y[i], v_z[i] = curr_vx, curr_vy, curr_vz
 
