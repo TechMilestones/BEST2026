@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from scipy.spatial.transform import Rotation as R
-from src.calculation_functions import get_cleaned_gps_dataframe, calculate_speeds_from_accel
+from calculation_functions import get_cleaned_gps_dataframe, calculate_speeds_from_accel
 
 def get_enu_coordinates(df_gps):
     if df_gps.empty: return df_gps
@@ -68,20 +68,32 @@ def final_calculations_for_3d(df_att, df_imu_0, df_imu_1, df_gps):
         direction='nearest'
     )
 
-    visualization_df = pd.merge_asof(
-        visualization_df, 
-        df_gps_enu[['TimeUS', 'x_m', 'y_m', 'z_m']].sort_values('TimeUS'),
-        on='TimeUS',
-        direction='backward'
-    )
-
+    # Interpolate GPS coordinates in Cartesian (ENU) space on the
+    # visualization timestamps. We build a union index of GPS times and
+    # visualization times, interpolate the GPS coordinates by time and
+    # then sample the interpolated values at visualization timestamps.
+    visualization_df = visualization_df.sort_values('TimeUS').reset_index(drop=True)
     coords = ['x_m', 'y_m', 'z_m']
-    visualization_df[coords] = visualization_df[coords].interpolate(method='linear')
 
-    visualization_df[coords] = visualization_df[coords].bfill()
-    
-    visualization_df[coords] = visualization_df[coords].fillna(0.0)
+    # prepare gps coordinates with datetime index
+    gps_df = df_gps_enu[['TimeUS'] + coords].copy().sort_values('TimeUS')
+    gps_times = pd.to_datetime(gps_df['TimeUS'], unit='us')
+    gps_df.index = gps_times
 
+    vis_times = pd.to_datetime(visualization_df['TimeUS'], unit='us')
+
+    # union index and interpolate on the time axis
+    union_index = gps_df.index.union(vis_times).sort_values()
+    gps_union = gps_df.reindex(union_index)
+    gps_union[coords] = gps_union[coords].interpolate(method='time')
+
+    # sample interpolated GPS at visualization times
+    gps_at_vis = gps_union.reindex(vis_times)[coords].reset_index(drop=True)
+
+    # fallback fills for any remaining NaNs (start/end gaps)
+    gps_at_vis = gps_at_vis.bfill().ffill().fillna(0.0)
+
+    visualization_df[coords] = gps_at_vis.values
 
     visualization_df = visualization_df.reset_index(drop=True)
 
