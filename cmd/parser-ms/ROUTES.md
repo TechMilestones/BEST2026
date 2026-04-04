@@ -1,10 +1,10 @@
 # ROUTES
 
-## GET /health
+## GET /api/gms/health
 
 Returns a 200 status code if the server is running and a `OK` message.
 
-## POST /upload-log
+## POST /api/upload-log
 
 Receives a FC flight log file from the frontend and parses it.
 
