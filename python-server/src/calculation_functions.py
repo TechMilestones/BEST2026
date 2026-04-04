@@ -92,10 +92,16 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     ).reset_index(drop=True)
 
 
-    fs = 50.0  
+    # Estimate sampling frequency from telemetry timestamps instead of using a static value.
+    dt_seconds = df['TimeUS'].diff() / 1_000_000.0
+    dt_seconds = dt_seconds[(dt_seconds > 0) & np.isfinite(dt_seconds)]
+    fs = float(1.0 / dt_seconds.median()) if not dt_seconds.empty else 50.0
     cutoff = 4.0
     try:
-        b, a = butter(2, cutoff / (fs / 2), btype='low')
+        # Keep normalized cutoff in (0, 1) even if estimated fs is low/noisy.
+        wn = cutoff / (fs / 2) if fs > 0 else 0.0
+        wn = min(max(wn, 1e-3), 0.99)
+        b, a = butter(2, wn, btype='low')
         for col in ['AccX', 'AccY', 'AccZ']:
 
             df[col] = filtfilt(b, a, df[col].ffill().fillna(0))
