@@ -86,13 +86,35 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
     }, [])
 
     const setFlightData = (data: FlightData[]) => {
-        _setFlightData(data)
-        sessionStorage.setItem("visualization_data", JSON.stringify(data))
+        const sanitizedData = data.map(item => ({
+            ...item,
+            TimeUS: Number(item.TimeUS),
+            x_m: Number(item.x_m),
+            y_m: Number(item.y_m),
+            z_m: Number(item.z_m),
+            q_w: Number(item.q_w),
+            q_x: Number(item.q_x),
+            q_y: Number(item.q_y),
+            q_z: Number(item.q_z),
+            v_mag: Number(item.v_mag),
+            lat: item.lat != null ? Number(item.lat) : undefined,
+            lon: item.lon != null ? Number(item.lon) : undefined,
+        }));
+        _setFlightData(sanitizedData)
+        sessionStorage.setItem("visualization_data", JSON.stringify(sanitizedData))
     }
 
     const setMetrics = (m: FlightMetrics) => {
-        _setMetrics(m)
-        sessionStorage.setItem("flight_metrics", JSON.stringify(m))
+        const sanitizedMetrics = {
+            total_distance: Number(m.total_distance),
+            max_horizontal_speed: Number(m.max_horizontal_speed),
+            max_vertical_speed: Number(m.max_vertical_speed),
+            max_acceleration: Number(m.max_acceleration),
+            max_climb: Number(m.max_climb),
+            duration_s: Number(m.duration_s),
+        } as FlightMetrics;
+        _setMetrics(sanitizedMetrics)
+        sessionStorage.setItem("flight_metrics", JSON.stringify(sanitizedMetrics))
     }
 
     return (
