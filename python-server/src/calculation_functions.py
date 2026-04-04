@@ -35,7 +35,18 @@ def get_cleaned_gps_dataframe(df, speed_limit=300.0, vertical_speed_limit=150.0)
     speed = dist / dt
     bad_step_xy = speed > speed_limit
     bad_point_xy = bad_step_xy | bad_step_xy.shift(-1, fill_value=False)
+
+    # Startup GPS often has one spurious first fix; keep the second point so XY
+    # does not get flattened at the beginning of the trajectory.
+    if len(res) > 1 and bool(bad_step_xy.iloc[1]):
+        bad_point_xy.iloc[1] = False
+
     res.loc[bad_point_xy, ['Lat', 'Lng']] = np.nan
+
+    # If a GPS fix is unreliable in XY, treat its altitude as unreliable too.
+    # This avoids startup Z jumps when XY was already invalidated.
+    if 'Alt' in res.columns:
+        res.loc[bad_point_xy, 'Alt'] = np.nan
     
 
     if 'Alt' in res.columns:
