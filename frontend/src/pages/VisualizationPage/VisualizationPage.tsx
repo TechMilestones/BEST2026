@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import './VisualizationPage.css'
 import { useNavigate } from 'react-router-dom';
-import DronePlayerWithUI, { type TelemetryData } from '../../components/DronePlayerWithUI/DronePlayerWithUI';
 import TelemetryChart from '../../components/Chart/Chart';
+import { useVisualizationContext, type TelemetryData } from '../../context/VisualizationContext';
+import DronePlayerWithUI from '../../components/DronePlayerWithUI/DronePlayerWithUI';
 
 // Форматує секунди у рядок MM:SS
 function formatTime(sec: number): string {
@@ -14,32 +15,8 @@ function formatTime(sec: number): string {
 }
 
 export default function VisualizationPage() {
+  const { telemetry, setTelemetry, flightData, metrics } = useVisualizationContext()
   const navigate = useNavigate()
-  const [flightData, setFlightData] = useState<any[]>([])
-  const [telemetry, setTelemetry] = useState<TelemetryData | null>(null)
-
-  useEffect(() => {
-    fetch('/data2.json')
-      .then(res => res.json())
-      .then(data => {
-        const cleanData = data.map((row: any) => ({
-          ...row,
-          x_m: Number(row.x_m),
-          y_m: Number(row.y_m),
-          z_m: Number(row.z_m),
-          q_x: Number(row.q_x),
-          q_y: Number(row.q_y),
-          q_z: Number(row.q_z),
-          q_w: Number(row.q_w),
-          v_mag: Number(row.v_mag),
-          TimeUS: Number(row.TimeUS),
-          lat: row.lat != null ? Number(row.lat) : undefined,
-          lon: row.lon != null ? Number(row.lon) : undefined,
-        }))
-        setFlightData(cleanData)
-      })
-      .catch(err => console.error('Failed to load flight data:', err))
-  }, [])
 
   const startTime = Number(flightData[0]?.TimeUS);
 
@@ -54,6 +31,8 @@ export default function VisualizationPage() {
   const handleTelemetry = useCallback((t: TelemetryData) => {
     setTelemetry(t)
   }, [])
+
+  console.log("Telemetry:", telemetry)
 
   return (
     <div className='visual-page'>
@@ -74,7 +53,7 @@ export default function VisualizationPage() {
 
         <div className="visual-page_col">
           <div className="visual-page_item item-col">
-          <div className='visual-page_item_title'>ГРАФІКИ</div>
+            <div className='visual-page_item_title'>ГРАФІКИ</div>
             <TelemetryChart
               title="Залежність швидкості від часу"
               x_array={timeData}
@@ -91,7 +70,7 @@ export default function VisualizationPage() {
             />
           </div>
         </div>
-        
+
       </div>
 
       <div className='visual-page_row'>
@@ -100,65 +79,65 @@ export default function VisualizationPage() {
           <div className="visual-page_item_inner all-col">
             <div className="visual-page_item_value">
               <p>Загальна дистанція:</p>
-              <span>1259.10</span>м
+              <span>{metrics?.total_distance.toFixed(2) ?? '—'}</span>м
             </div>
             <div className="visual-page_item_value">
               <p>Макс. гор. швидкість:</p>
-              <span>15.08</span>м/c
+              <span>{metrics?.max_horizontal_speed.toFixed(2) ?? '—'}</span>м/c
             </div>
             <div className="visual-page_item_value">
               <p>Макс. верт. швидкість:</p>
-              <span>35.79</span>м/c
+              <span>{metrics?.max_vertical_speed.toFixed(2) ?? '—'}</span>м/c
             </div>
             <div className="visual-page_item_value">
               <p>Макс. прискорення:</p>
-              <span>82.91</span>м/c^2
+              <span>{metrics?.max_acceleration.toFixed(2) ?? '—'}</span>м/c^2
             </div>
             <div className="visual-page_item_value">
               <p>Макс. набір висоти:</p>
-              <span>561.46</span>м
+              <span>{metrics?.max_climb.toFixed(2) ?? '—'}</span>м
             </div>
             <div className="visual-page_item_value">
               <p>Тривалість польоту:</p>
-              <span>52.20</span>c
+              <span>{metrics?.duration_s.toFixed(2) ?? '—'}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="visual-page_col">
-          <div className="visual-page_item">
-            <div className='visual-page_item_title'>ТЕЛЕМЕТРІЯ</div>
-            <div className="visual-page_item_inner one-col">
-              <div className="visual-page_item_value">
-                <p>ШВИДКІСТЬ:</p>
-                <span>{telemetry ? telemetry.speedMs.toFixed(2) : '—'}</span>м/c
-              </div>
-              <div className="visual-page_item_value">
-                <p>ВИСОТА:</p>
-                <span>{telemetry ? telemetry.altitudeM.toFixed(2) : '—'}</span>м
-              </div>
-              <div className="visual-page_item_value">
-                <p>ШИРОТА:</p>
-                <span>{telemetry?.lat != null ? telemetry.lat.toFixed(6) : '—'}</span>
-              </div>
-              <div className="visual-page_item_value">
-                <p>ДОВГОТА:</p>
-                <span>{telemetry?.lon != null ? telemetry.lon.toFixed(6) : '—'}</span>
-              </div>
+        <div className="visual-page_item">
+          <div className='visual-page_item_title'>ТЕЛЕМЕТРІЯ</div>
+          <div className="visual-page_item_inner one-col">
+            <div className="visual-page_item_value">
+              <p>ШВИДКІСТЬ:</p>
+              <span>{telemetry ? telemetry.speedMs.toFixed(2) : '—'}</span>м/c
             </div>
-          </div>
-
-          <div className="visual-page_item">
-            <div className='visual-page_item_title'>ЧАС ПОЛЬОТУ</div>
-            <div className="visual-page_item_inner one-col">
-              <div className="visual-page_item_value">
-                <span>{telemetry ? formatTime(telemetry.elapsedSec) : '00:00:00'}</span>
-                <p>Залишилося: {telemetry ? formatTime(telemetry.remainingSec) : '—'}</p>
-              </div>
+            <div className="visual-page_item_value">
+              <p>ВИСОТА:</p>
+              <span>{telemetry ? telemetry.altitudeM.toFixed(2) : '—'}</span>м
+            </div>
+            <div className="visual-page_item_value">
+              <p>ШИРОТА:</p>
+              <span>{telemetry?.lat != null ? telemetry.lat.toFixed(6) : '—'}</span>
+            </div>
+            <div className="visual-page_item_value">
+              <p>ДОВГОТА:</p>
+              <span>{telemetry?.lon != null ? telemetry.lon.toFixed(6) : '—'}</span>
             </div>
           </div>
         </div>
+
+        <div className="visual-page_item">
+          <div className='visual-page_item_title'>ЧАС ПОЛЬОТУ</div>
+          <div className="visual-page_item_inner one-col">
+            <div className="visual-page_item_value">
+              <span>{telemetry ? formatTime(telemetry.elapsedSec) : '00:00:00'}</span>
+              <p>Залишилося: {telemetry ? formatTime(telemetry.remainingSec) : '—'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   )

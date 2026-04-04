@@ -4,39 +4,9 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { OrbitControls, Line, Sphere, Html, useProgress, Grid } from '@react-three/drei'
 import { OBJLoader } from 'three-stdlib'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { type FlightData, type TelemetryData } from '../../context/VisualizationContext'
 
 // --- 1. Інтерфейси ---
-interface FlightData {
-  TimeUS: number
-  x_m: number
-  y_m: number
-  z_m: number
-  q_w: number
-  q_x: number
-  q_y: number
-  q_z: number
-  v_mag: number
-  // опціональні GPS поля якщо є в даних
-  lat?: number
-  lon?: number
-}
-
-// Телеметрія яку компонент повертає назовні
-export interface TelemetryData {
-  /** Поточний час від початку польоту, секунди */
-  elapsedSec: number
-  /** Час що залишився до кінця польоту, секунди */
-  remainingSec: number
-  /** Поточна швидкість, м/с */
-  speedMs: number
-  /** Поточна висота (z_m), метри */
-  altitudeM: number
-  /** Широта (якщо є в даних) */
-  lat: number | null
-  /** Довгота (якщо є в даних) */
-  lon: number | null
-}
-
 interface DroneModelProps {
   textureUrl: string
   objUrl: string
@@ -388,8 +358,8 @@ export default function DronePlayerWithUI({
                   animationTimeRef.current = t1 + (t2 - t1) * 0.5
                 }
               }}
-              style={{...sliderStyle, marginBottom: '12px'}}
-          
+              style={{ ...sliderStyle, marginBottom: '12px' }}
+
             />
           </div>
 

@@ -1,7 +1,11 @@
+import { useVisualizationContext } from "../../context/VisualizationContext";
 import "./DownloadPage.css";
 import { useNavigate } from "react-router-dom";
 
+const logApiUrl = import.meta.env.VITE_API_URL;
+
 export default function DownloadPage() {
+  const { setFlightData, setMetrics } = useVisualizationContext();
   const navigate = useNavigate();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -13,15 +17,13 @@ export default function DownloadPage() {
     input?.click();
   };
 
-  const processFile = async (file: File | null) => {
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await fetch(
-        `/upload-log?file_name=${encodeURIComponent(file.name)}`,
+        `${logApiUrl}/api/upload-log`,
         {
           method: "POST",
           body: formData,
@@ -35,6 +37,20 @@ export default function DownloadPage() {
       const data = await response.json();
       console.log(data);
 
+      if ("metrics" in data) {
+        setMetrics(data.metrics);
+      } else {
+        console.error("Invalid data format: no metrics found");
+        return;
+      }
+
+      if ("visualization_data" in data) {
+        setFlightData(data.visualization_data);
+      } else {
+        console.error("Invalid data format: no visualization data found");
+        return;
+      }
+
       navigate("/visual");
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -43,6 +59,7 @@ export default function DownloadPage() {
 
   const getData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
+    if (!selectedFile) return;
     processFile(selectedFile);
   };
 
@@ -50,6 +67,7 @@ export default function DownloadPage() {
     e.preventDefault();
 
     const droppedFile = e.dataTransfer.files?.[0] || null;
+    if (!droppedFile) return;
     processFile(droppedFile);
   };
 
@@ -61,7 +79,7 @@ export default function DownloadPage() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {"Drop file here or click to upload"}
+        Drop file here or click to upload
       </div>
 
       <input

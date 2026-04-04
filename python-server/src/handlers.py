@@ -9,7 +9,7 @@ from src.metrics_calculation import calculate_metrics
 
 def _estimate_sampling_hz(df, time_col="TimeUS"):
     """
-    Estimate sampling frequency (Hz) from a DataFrame by 
+    Estimate sampling frequency (Hz) from a DataFrame by
     analyzing the time intervals between consecutive samples.
     """
 
@@ -79,17 +79,24 @@ def build_dataframes_from_json(json_input):
     else:
         payload = json_input
 
-    df_att = pd.DataFrame(payload.get("att", []), columns=["time_us", "roll", "pitch", "yaw"])
+    df_att = pd.DataFrame(
+        payload.get("att", []), columns=["time_us", "roll", "pitch", "yaw"]
+    )
     df_att = df_att.rename(
         columns={"time_us": "TimeUS", "roll": "Roll", "pitch": "Pitch", "yaw": "Yaw"}
     )
 
-    df_gps = pd.DataFrame(payload.get("gps", []), columns=["time_us", "lat", "lng", "alt"])
+    df_gps = pd.DataFrame(
+        payload.get("gps", []), columns=["time_us", "lat", "lng", "alt"]
+    )
     df_gps = df_gps.rename(
         columns={"time_us": "TimeUS", "lat": "Lat", "lng": "Lng", "alt": "Alt"}
     )
 
-    imu_df = pd.DataFrame(payload.get("imu", []), columns=["instance", "time_us", "acc_x", "acc_y", "acc_z"])
+    imu_df = pd.DataFrame(
+        payload.get("imu", []),
+        columns=["instance", "time_us", "acc_x", "acc_y", "acc_z"],
+    )
     if "instance" not in imu_df.columns:
         imu_df["instance"] = 0
 
@@ -103,14 +110,21 @@ def build_dataframes_from_json(json_input):
                 "acc_z": "AccZ",
             }
         )
-        return subset[["TimeUS", "AccX", "AccY", "AccZ"]] if not subset.empty else pd.DataFrame(
-            columns=["TimeUS", "AccX", "AccY", "AccZ"]
+        return (
+            subset[["TimeUS", "AccX", "AccY", "AccZ"]]
+            if not subset.empty
+            else pd.DataFrame(columns=["TimeUS", "AccX", "AccY", "AccZ"])
         )
 
     df_imu_0 = _select_imu(0)
     df_imu_1 = _select_imu(1)
 
-    return df_att[["TimeUS", "Roll", "Pitch", "Yaw"]], df_imu_0, df_imu_1, df_gps[["TimeUS", "Lat", "Lng", "Alt"]]
+    return (
+        df_att[["TimeUS", "Roll", "Pitch", "Yaw"]],
+        df_imu_0,
+        df_imu_1,
+        df_gps[["TimeUS", "Lat", "Lng", "Alt"]],
+    )
 
 
 def dataframe_to_json_records(df):
@@ -133,7 +147,9 @@ def dataframe_to_json_records(df):
     result_df = df[existing_columns].copy()
 
     for col in result_df.columns:
-        result_df[col] = result_df[col].map(lambda value: "" if pd.isna(value) else str(value))
+        result_df[col] = result_df[col].map(
+            lambda value: "" if pd.isna(value) else str(value)
+        )
 
     return result_df.to_dict(orient="records")
 
@@ -148,6 +164,6 @@ def get_all_data(data):
     metrics = calculate_metrics(visualization_df, df_gps)
 
     return {
-        "visualisation_data": visualization_data,
+        "visualization_data": visualization_data,
         "metrics": metrics,
     }
