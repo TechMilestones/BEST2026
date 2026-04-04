@@ -92,10 +92,16 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     ).reset_index(drop=True)
 
 
-    fs = 50.0  
+    # Estimate sampling frequency from telemetry timestamps instead of using a static value.
+    dt_seconds = df['TimeUS'].diff() / 1_000_000.0
+    dt_seconds = dt_seconds[(dt_seconds > 0) & np.isfinite(dt_seconds)]
+    fs = float(1.0 / dt_seconds.median()) if not dt_seconds.empty else 50.0
     cutoff = 4.0
     try:
-        b, a = butter(2, cutoff / (fs / 2), btype='low')
+        # Keep normalized cutoff in (0, 1) even if estimated fs is low/noisy.
+        wn = cutoff / (fs / 2) if fs > 0 else 0.0
+        wn = min(max(wn, 1e-3), 0.99)
+        b, a = butter(2, wn, btype='low')
         for col in ['AccX', 'AccY', 'AccZ']:
 
             df[col] = filtfilt(b, a, df[col].ffill().fillna(0))
@@ -127,20 +133,15 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     v_x, v_y, v_z = np.zeros(len(df)), np.zeros(len(df)), np.zeros(len(df))
     
     curr_vx, curr_vy, curr_vz = 0.0, 0.0, 0.0
-    decay = 0.9995 
 
     for i in range(1, len(df)):
         if dt[i] <= 0 or dt[i] > 0.5: continue 
         
 
-        curr_vx = (curr_vx + 0.5 * (a_x_pure[i] + a_x_pure[i-1]) * dt[i]) * decay
-        curr_vy = (curr_vy + 0.5 * (a_y_pure[i] + a_y_pure[i-1]) * dt[i]) * decay
-        curr_vz = (curr_vz + 0.5 * (a_z_pure[i] + a_z_pure[i-1]) * dt[i]) * decay
-        
-  
-        acc_mag = np.sqrt(a_x_pure[i]**2 + a_y_pure[i]**2 + a_z_pure[i]**2)
-        if acc_mag < 0.1:
-            curr_vx *= 0.95; curr_vy *= 0.95; curr_vz *= 0.95
+        # For rocket profiles, avoid artificial damping that suppresses true peak velocity.
+        curr_vx = curr_vx + 0.5 * (a_x_pure[i] + a_x_pure[i-1]) * dt[i]
+        curr_vy = curr_vy + 0.5 * (a_y_pure[i] + a_y_pure[i-1]) * dt[i]
+        curr_vz = curr_vz + 0.5 * (a_z_pure[i] + a_z_pure[i-1]) * dt[i]
         
         v_x[i], v_y[i], v_z[i] = curr_vx, curr_vy, curr_vz
 
