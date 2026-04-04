@@ -1,11 +1,11 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from src.handlers import get_all_data 
+from dotenv import load_dotenv
+import os
 
-
-def read_json_file(filename):
-    with open(filename, "r", encoding="utf-8") as f:
-        return json.load(f)
+load_dotenv("../ports.env")
+PORT = int(os.getenv("PYTHON_SERVICE_PORT", 8888))
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type='application/json'):
@@ -51,7 +51,8 @@ class SimpleHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
 
 
+
 if __name__ == '__main__':
-    server = HTTPServer(('localhost', 8888), SimpleHandler)
-    print('🚀 Server running on http://localhost:8888')
+    server = HTTPServer(('localhost',  PORT), SimpleHandler)
+    print(f'Server running on http://localhost:{PORT}')
     server.serve_forever()
