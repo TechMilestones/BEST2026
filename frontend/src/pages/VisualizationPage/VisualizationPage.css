@@ -1,5 +1,5 @@
 .visual-page {
-    padding: 10px 0;
+    padding: 10px 0 50px 0;
 
     font-family: "Inter", sans-serif;
     text-align: left;
@@ -9,15 +9,35 @@
     row-gap: 10px;
 }
 
-.visual-page_title {
+.visual-page_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px;
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
     border-radius: 10px;
-    
-    padding: 20px;
-    
+}
+
+.visual-page_title {  
     font-size: 22px;
     font-weight: 700;
+}
+.visual-page_back-btn {
+    padding: 10px 15px;
+    
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    
+    color: #fff;
+    background-color: rgb(73, 73, 73);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.visual-page_back-btn:hover {
+    background-color: rgb(63, 63, 63);
 }
 
 .visual-page_list {
@@ -30,35 +50,41 @@
 
 .visual-page_row {
     display: grid;
-    grid-template-columns: 33% 33% 33%;
     gap: 10px;
 }
 .visual-page_row.row-3d {
-    grid-template-columns: 74% 25%;
+    grid-template-columns: 79.2% 20%;
+}
+.visual-page_col {
+    display: grid;
+    gap: 10px;
 }
 
-.visual-page_row-item {
+.visual-page_item {
     padding: 20px;
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
     border-radius: 10px;
 }
 
-.visual-page_row-item_inner {
+.visual-page_item_inner {
     display: grid;
     gap: 10px 5px;
 }
-.visual-page_row-item_inner.one-col {
+.visual-page_item_inner.one-col {
     grid-template-columns: repeat(1, 100%);
 }
-.visual-page_row-item_inner.two-col {
+.visual-page_item_inner.two-col {
     grid-template-columns: repeat(2, 49%);
 }
-.visual-page_row-item_inner.three-col {
+.visual-page_item_inner.three-col {
     grid-template-columns: repeat(3, 33%);
 }
+.visual-page_item_inner.all-col {
+    grid-template-columns: repeat(6, 16%);
+}
 
-.visual-page_row-item_title {
+.visual-page_item_title {
     font-size: 22px;
     font-weight: 700;
     text-align: left;
@@ -66,41 +92,18 @@
     margin-bottom: 10px;
 }
 
-.visual-page_row-item_value {
+.visual-page_item_value {
     font-family: "IBM Plex Mono", monospace;
     color: #999;
 }
-.visual-page_row-item_value p {
+.visual-page_item_value p {
     font-family: "Inter", sans-serif;
     line-height: 1.1;
 
     margin-bottom: 7px;
 }
-.visual-page_row-item_value span {
+.visual-page_item_value span {
     font-size: 34px;
     color: #fff;
 }
 
-.visual-page_ball {
-    position: fixed;
-    right: 30px;
-    bottom: 30px;
-}
-
-.floating-menu {
-    position: fixed;
-    right: 20px;
-    bottom: 90px;
-
-    background-color: rgb(29, 33, 39);
-    border-radius: 10px;
-    width: 150px;
-    height: 30px;
-
-}
-
-.floating-menu_btn {
-    color: #fff;
-    background-color: transparent;
-    cursor: pointer;
-}

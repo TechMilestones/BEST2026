@@ -1,18 +1,18 @@
 import { useEffect, useState, useCallback } from 'react'
-import FloatingBall from '../../components/FloatingBall/FloatingBall'
 import './VisualizationPage.css'
 import { useNavigate } from 'react-router-dom';
 import DronePlayerWithUI, { type TelemetryData } from '../DronePlayerWithUI/DronePlayerWithUI';
 
 // Форматує секунди у рядок MM:SS
 function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60).toString().padStart(2, '0')
-  const s = Math.floor(sec % 60).toString().padStart(2, '0')
-  return `${m}:${s}`
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = Math.floor(sec % 60).toString().padStart(2, '0');
+  const ms = Math.floor((sec % 1) * 1000).toString().padStart(3, '0');
+
+  return `${m}:${s}.${ms}`;
 }
 
 export default function VisualizationPage() {
-  const [isOpened, setOpened] = useState(false)
   const navigate = useNavigate()
   const [flightData, setFlightData] = useState<any[]>([])
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null)
@@ -47,10 +47,13 @@ export default function VisualizationPage() {
 
   return (
     <div className='visual-page'>
-      <h1 className="visual-page_title">FPV DASHBOARD</h1>
+      <header className='visual-page_header'>
+        <h1 className="visual-page_title">FPV DASHBOARD</h1>
+        <button className='visual-page_back-btn' onClick={() => navigate("/")}>Back</button>
+      </header>
       <div className='visual-page_row row-3d'>
-        <div className="visual-page_row-item">
-          <div className='visual-page_row-item_title'>3D ВІЗУАЛІЗАЦІЯ</div>
+        <div className="visual-page_item">
+          <div className='visual-page_item_title'>3D ВІЗУАЛІЗАЦІЯ</div>
           <DronePlayerWithUI
             flightData={flightData}
             objUrl='/modelka/12217_rocket_v1_l1.obj'
@@ -59,30 +62,67 @@ export default function VisualizationPage() {
           />
         </div>
 
-        <div className="visual-page_row-item">
-          <div className='visual-page_row-item_title'>ДАНІ ПРО ПОЛІТ</div>
-          <div className="visual-page_row-item_inner two-col">
-            <div className="visual-page_row-item_value">
+        <div className="visual-page_col">
+          <div className="visual-page_item">
+          <div className='visual-page_item_title'>ТЕЛЕМЕТРІЯ</div>
+          <div className="visual-page_item_inner one-col">
+            <div className="visual-page_item_value">
+              <p>ШВИДКІСТЬ:</p>
+              <span>{telemetry ? telemetry.speedMs.toFixed(2) : '—'}</span>м/c
+            </div>
+            <div className="visual-page_item_value">
+              <p>ВИСОТА:</p>
+              <span>{telemetry ? telemetry.altitudeM.toFixed(2) : '—'}</span>м
+            </div>
+            <div className="visual-page_item_value">
+              <p>ШИРОТА:</p>
+              <span>{telemetry?.lat != null ? telemetry.lat.toFixed(6) : '—'}</span>
+            </div>
+            <div className="visual-page_item_value">
+              <p>ДОВГОТА:</p>
+              <span>{telemetry?.lon != null ? telemetry.lon.toFixed(6) : '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="visual-page_item">
+          <div className='visual-page_item_title'>ЧАС ПОЛЬОТУ</div>
+          <div className="visual-page_item_inner one-col">
+            <div className="visual-page_item_value">
+              <span>{telemetry ? formatTime(telemetry.elapsedSec) : '00:00:00'}</span>
+              <p>Залишилося: {telemetry ? formatTime(telemetry.remainingSec) : '—'}</p>
+            </div>
+          </div>
+        </div>
+        </div>
+        
+      </div>
+
+      <div className='visual-page_row'>
+        <div className="visual-page_item">
+          <div className='visual-page_item_title'>ДАНІ ПРО ПОЛІТ</div>
+          <div className="visual-page_item_inner all-col">
+            <div className="visual-page_item_value">
               <p>Загальна дистанція:</p>
               <span>1259.10</span>м
             </div>
-            <div className="visual-page_row-item_value">
+            <div className="visual-page_item_value">
               <p>Макс. гор. швидкість:</p>
               <span>15.08</span>м/c
             </div>
-            <div className="visual-page_row-item_value">
+            <div className="visual-page_item_value">
               <p>Макс. верт. швидкість:</p>
               <span>35.79</span>м/c
             </div>
-            <div className="visual-page_row-item_value">
+            <div className="visual-page_item_value">
               <p>Макс. прискорення:</p>
               <span>82.91</span>м/c^2
             </div>
-            <div className="visual-page_row-item_value">
+            <div className="visual-page_item_value">
               <p>Макс. набір висоти:</p>
               <span>561.46</span>м
             </div>
-            <div className="visual-page_row-item_value">
+            <div className="visual-page_item_value">
               <p>Тривалість польоту:</p>
               <span>52.20</span>c
             </div>
@@ -90,53 +130,6 @@ export default function VisualizationPage() {
         </div>
       </div>
 
-      <div className='visual-page_row'>
-        <div className="visual-page_row-item">
-          <div className='visual-page_row-item_title'>ТЕЛЕМЕТРІЯ</div>
-          <div className="visual-page_row-item_inner three-col">
-            <div className="visual-page_row-item_value">
-              <p>ШВИДКІСТЬ:</p>
-              <span>{telemetry ? telemetry.speedMs.toFixed(2) : '—'}</span>м/c
-            </div>
-            <div className="visual-page_row-item_value">
-              <p>ВИСОТА:</p>
-              <span>{telemetry ? telemetry.altitudeM.toFixed(2) : '—'}</span>м
-            </div>
-            <div className="visual-page_row-item_value">
-              <p>НАПРАВЛЕННЯ:</p>
-              <span>—</span>
-            </div>
-            <div className="visual-page_row-item_value">
-              <p>ШИРОТА:</p>
-              <span>{telemetry?.lat != null ? telemetry.lat.toFixed(6) : '—'}</span>
-            </div>
-            <div className="visual-page_row-item_value">
-              <p>ДОВГОТА:</p>
-              <span>{telemetry?.lon != null ? telemetry.lon.toFixed(6) : '—'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="visual-page_row-item">
-          <div className='visual-page_row-item_title'>ЧАС ПОЛЬОТУ</div>
-          <div className="visual-page_row-item_inner one-col">
-            <div className="visual-page_row-item_value">
-              <span>{telemetry ? formatTime(telemetry.elapsedSec) : '00:00'}</span>
-              <p>Залишилося: {telemetry ? formatTime(telemetry.remainingSec) : '—'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className='visual-page_ball'>
-        <FloatingBall onClick={() => { setOpened(!isOpened) }} />
-      </div>
-
-      {isOpened && (
-        <div className="floating-menu">
-          <button className='floating-menu_btn' onClick={() => navigate("/")}>Upload another BIN-file</button>
-        </div>
-      )}
     </div>
   )
 }
