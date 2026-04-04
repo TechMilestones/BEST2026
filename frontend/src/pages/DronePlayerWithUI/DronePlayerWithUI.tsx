@@ -16,6 +16,25 @@ interface FlightData {
   q_y: number
   q_z: number
   v_mag: number
+  // опціональні GPS поля якщо є в даних
+  lat?: number
+  lon?: number
+}
+
+// Телеметрія яку компонент повертає назовні
+export interface TelemetryData {
+  /** Поточний час від початку польоту, секунди */
+  elapsedSec: number
+  /** Час що залишився до кінця польоту, секунди */
+  remainingSec: number
+  /** Поточна швидкість, м/с */
+  speedMs: number
+  /** Поточна висота (z_m), метри */
+  altitudeM: number
+  /** Широта (якщо є в даних) */
+  lat: number | null
+  /** Довгота (якщо є в даних) */
+  lon: number | null
 }
 
 interface DroneModelProps {
@@ -36,11 +55,10 @@ interface DroneSceneProps {
   animationTimeRef: React.MutableRefObject<number>
   objUrl: string
   textureUrl: string
+  onTelemetry?: (t: TelemetryData) => void
 }
 
 // --- 2. DroneModel ---
-// useLoader — suspend-based, завжди маунтується всередині <Suspense>, ніколи умовно.
-
 const DroneModel = React.forwardRef<THREE.Group, DroneModelProps>(
   ({ textureUrl, objUrl, ...props }, ref) => {
     const colorMap = useLoader(THREE.TextureLoader, textureUrl)
@@ -106,6 +124,9 @@ function getInterpolatedState(data: FlightData[], floatIndex: number) {
     position: _posA.clone(),
     quaternion: _quatA.clone(),
     v_mag: d1.v_mag + (d2.v_mag - d1.v_mag) * weight,
+    z_m: d1.z_m + (d2.z_m - d1.z_m) * weight,
+    lat: d1.x_m + (d2.x_m - d1.x_m) * weight,
+    lon: d1.y_m + (d2.y_m - d1.y_m) * weight,
     TimeUS: d1.TimeUS + (d2.TimeUS - d1.TimeUS) * weight,
   }
 }
@@ -126,9 +147,6 @@ function getStateAtTime(data: FlightData[], targetTimeUS: number) {
 }
 
 // --- 5. DroneScene ---
-// Отримує data: FlightData[] (ніколи не null — батько вирішує коли рендерити).
-// НЕ має умовного return перед хуками — порядок хуків завжди стабільний.
-
 const DroneScene: React.FC<DroneSceneProps> = ({
   data,
   currentIndex,
@@ -140,9 +158,13 @@ const DroneScene: React.FC<DroneSceneProps> = ({
   animationTimeRef,
   objUrl,
   textureUrl,
+  onTelemetry,
 }) => {
   const droneRef = useRef<THREE.Group>(null!)
   const gridRef = useRef<THREE.Object3D>(null!)
+  // Ref щоб уникнути зайвих ре-рендерів від onTelemetry
+  const onTelemetryRef = useRef(onTelemetry)
+  useEffect(() => { onTelemetryRef.current = onTelemetry }, [onTelemetry])
 
   const { points, colors } = useMemo(() => {
     const pts = data.map((d) => new THREE.Vector3(d.x_m, d.z_m, -d.y_m))
@@ -160,6 +182,7 @@ const DroneScene: React.FC<DroneSceneProps> = ({
 
     const startTime = data[0].TimeUS
     const endTime = data[data.length - 1].TimeUS
+    const totalSec = (endTime - startTime) / 1_000_000
 
     if (isPlaying) {
       animationTimeRef.current += delta * 1_000_000 * playbackSpeed
@@ -195,11 +218,23 @@ const DroneScene: React.FC<DroneSceneProps> = ({
       ((animationTimeRef.current - startTime) / (endTime - startTime)) * (data.length - 1)
     )
     if (newIndex !== currentIndex) setCurrentIndex(newIndex)
+
+    // Викликаємо callback з поточною телеметрією (через ref — не спричиняє ре-рендер)
+    if (onTelemetryRef.current) {
+      const elapsedSec = (animationTimeRef.current - startTime) / 1_000_000
+      onTelemetryRef.current({
+        elapsedSec,
+        remainingSec: totalSec - elapsedSec,
+        speedMs: stateInterp.v_mag,
+        altitudeM: stateInterp.z_m,
+        lat: stateInterp.lat,
+        lon: stateInterp.lon,
+      })
+    }
   })
 
   return (
     <group>
-      {/* DroneModel завжди маунтується — окремий Suspense, ніколи умовно */}
       <Suspense fallback={null}>
         <DroneModel ref={droneRef} objUrl={objUrl} textureUrl={textureUrl} scale={0.005} />
       </Suspense>
@@ -260,12 +295,15 @@ interface Props {
   flightData?: FlightData[]
   objUrl?: string
   textureUrl?: string
+  /** Викликається щокадру з поточними даними телеметрії */
+  onTelemetry?: (t: TelemetryData) => void
 }
 
 export default function DronePlayerWithUI({
   flightData,
   objUrl = '/fpv_cubed.obj',
   textureUrl = '/fpv_3.png',
+  onTelemetry,
 }: Props) {
   const orbitRef = useRef<OrbitControlsImpl>(null!)
   const animationTimeRef = useRef<number>(0)
@@ -274,7 +312,6 @@ export default function DronePlayerWithUI({
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Скидаємо індекс і час при зміні даних
   useEffect(() => {
     if (flightData && flightData.length > 0) {
       setCurrentIndex(0)
@@ -286,7 +323,7 @@ export default function DronePlayerWithUI({
   const hasData = flightData && flightData.length > 0
 
   return (
-    <div style={{width: '100%', aspectRatio: '16/9', background: '#818080', position: 'relative' }}>
+    <div style={{ width: '100%', aspectRatio: '16/9', background: '#818080', position: 'relative' }}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 60, near: 0.1, far: 5000 }}
         shadows
@@ -296,8 +333,6 @@ export default function DronePlayerWithUI({
         <pointLight position={[15, 15, 15]} intensity={2} />
 
         <Suspense fallback={<Loader />}>
-          {/* DroneScene рендериться тільки коли є дані — але це не порушує хуки,
-              бо DroneScene сам по собі стабільний (не має умовних return до хуків) */}
           {hasData && (
             <DroneScene
               data={flightData}
@@ -310,6 +345,7 @@ export default function DronePlayerWithUI({
               animationTimeRef={animationTimeRef}
               objUrl={objUrl}
               textureUrl={textureUrl}
+              onTelemetry={onTelemetry}
             />
           )}
         </Suspense>
