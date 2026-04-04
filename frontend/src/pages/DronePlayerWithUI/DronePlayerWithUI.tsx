@@ -27,7 +27,7 @@ interface DroneModelProps {
   position?: [number, number, number]
 }
 
-interface DroneVisualizerProps {
+interface DroneVisualizerProps extends DroneModelProps {
   data: FlightData[] | null
   setData: React.Dispatch<React.SetStateAction<FlightData[]>>
   currentIndex: number
@@ -218,7 +218,7 @@ const DroneVisualizer: React.FC<DroneVisualizerProps> = ({
   return (
     <group>
       <Suspense fallback={null}>
-        <DroneModel ref={droneRef} objUrl="/fpv_cubed.obj" textureUrl="/fpv_3.png" scale={0.5} />
+        <DroneModel ref={droneRef} objUrl="/modelka/12217_rocket_v1_l1.obj" textureUrl="/modelka/rocket.jpg" scale={0.5} />
       </Suspense>
       
       <Line points={points} vertexColors={colors as any} lineWidth={2} />
@@ -268,7 +268,7 @@ const uiContainerStyle: React.CSSProperties = {
   backdropFilter: 'blur(5px)', border: '1px solid rgba(255,255,255,0.1)', zIndex: 100
 }
 
-export default function DronePlayerWithUI({ flightData = [] }: Props) {
+export default function DronePlayerWithUI({ flightData = [], objUrl="", textureUrl="" }: Props) {
   const orbitRef = useRef<OrbitControlsImpl>(null!)
   const [data, setData] = useState<FlightData[]>(flightData)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -277,7 +277,7 @@ export default function DronePlayerWithUI({ flightData = [] }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#050505', position: 'relative' }}>
+    <div style={{ width: '100%', aspectRatio: '2 / 1', background: '#050505', position: 'relative' }}>
       <Canvas 
         camera={{ position: [10, 10, 10], fov: 60, near: 0.1, far: 5000 }}
         shadows 
@@ -296,6 +296,8 @@ export default function DronePlayerWithUI({ flightData = [] }: Props) {
             isCameraLocked={isCameraLocked}
             playbackSpeed={playbackSpeed}
             orbitRef={orbitRef}
+            objUrl={objUrl}
+            textureUrl={textureUrl}
           />
         </Suspense>
 

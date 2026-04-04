@@ -1,5 +1,12 @@
 .visual-page {
     padding: 10px 0;
+
+    font-family: "Inter", sans-serif;
+    text-align: left;
+    
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
 }
 
 .visual-page_title {
@@ -7,53 +14,93 @@
     color: #fff;
     border-radius: 10px;
     
-    padding: 12px 0;
-    margin-bottom: 50px;
+    padding: 20px;
     
     font-size: 22px;
     font-weight: 700;
 }
 
-.visual-page_inner {
-    display: grid;
-    grid-template-columns: 60% 40%;
-    gap: 20px;
-}
-
-.visual-page_3d img {
-    width: 50%;
-    border-radius: 10px;
-}
-
 .visual-page_list {
     margin-top: 50px;
+
     display: grid;
     grid-template-columns: repeat(3, 33%);
     gap: 10px;
 }
 
-.visual-page_list-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.visual-page_row {
+    display: grid;
+    grid-template-columns: 33% 33% 33%;
+    gap: 10px;
+}
+.visual-page_row.row-3d {
+    grid-template-columns: 74% 25%;
+}
 
+.visual-page_row-item {
+    padding: 20px;
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
-
-    height: 135px;
-    padding: 0 15px;
-    
-    text-align: left;
     border-radius: 10px;
 }
-.visual-page_list-card_title {
-    text-align: center;
+
+.visual-page_row-item_inner {
+    display: grid;
+    gap: 10px 5px;
+}
+.visual-page_row-item_inner.one-col {
+    grid-template-columns: repeat(1, 100%);
+}
+.visual-page_row-item_inner.two-col {
+    grid-template-columns: repeat(2, 49%);
+}
+.visual-page_row-item_inner.three-col {
+    grid-template-columns: repeat(3, 33%);
+}
+
+.visual-page_row-item_title {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: left;
+
     margin-bottom: 10px;
 }
-.visual-page_list-card_num {
-    font-size: 24px;
-    font-weight: 700;
-}
-.visual-page_list-card_metric {
+
+.visual-page_row-item_value {
+    font-family: "IBM Plex Mono", monospace;
     color: #999;
+}
+.visual-page_row-item_value p {
+    font-family: "Inter", sans-serif;
+    line-height: 1.1;
+
+    margin-bottom: 7px;
+}
+.visual-page_row-item_value span {
+    font-size: 34px;
+    color: #fff;
+}
+
+.visual-page_ball {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+}
+
+.floating-menu {
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+
+    background-color: rgb(29, 33, 39);
+    border-radius: 10px;
+    width: 150px;
+    height: 30px;
+
+}
+
+.floating-menu_btn {
+    color: #fff;
+    background-color: transparent;
+    cursor: pointer;
 }
