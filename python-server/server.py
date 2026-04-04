@@ -30,20 +30,13 @@ class SimpleHandler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length)
             
    
-            if self.path == '/process':
+            if self.path == '/api/process':
                 data = json.loads(body)
                 result = get_all_data(data)
 
                 self._set_headers()
-                self.wfile.write(json.dumps(result).encode('utf-8'))
+                self.wfile.write(json.dumps(result).encode('utf-8'))  
 
-  
-            elif self.path == '/test':
-                data = json.loads(body)
-                data = get_all_data()
-                self._set_headers()
-                self.wfile.write(json.dumps(data).encode('utf-8'))
-            
             else:
                 self.send_error(404, "Endpoint not found")
 
