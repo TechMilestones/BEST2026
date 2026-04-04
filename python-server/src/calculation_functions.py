@@ -23,22 +23,26 @@ def _calculate_step_distances(df):
     return R * c
 
 # clean GPS data by removing outliers and interpolating missing values
-def get_cleaned_gps_dataframe(df, speed_limit=300.0, vertical_speed_limit=110.0):
+def get_cleaned_gps_dataframe(df, speed_limit=300.0, vertical_speed_limit=150.0):
     res = df.copy().reset_index(drop=True)
     
     res.loc[(res['Lat'].abs() < 0.1) | (res['Lng'].abs() < 0.1), ['Lat', 'Lng']] = np.nan
     
   
+    # Step-based anomaly: if ANY step is too fast, clean both points of that step.
     dt = res['TimeUS'].diff() / 1_000_000.0
-  
-    dist = _calculate_step_distances(res) 
+    dist = _calculate_step_distances(res)
     speed = dist / dt
-    res.loc[speed > speed_limit, ['Lat', 'Lng']] = np.nan
+    bad_step_xy = speed > speed_limit
+    bad_point_xy = bad_step_xy | bad_step_xy.shift(-1, fill_value=False)
+    res.loc[bad_point_xy, ['Lat', 'Lng']] = np.nan
     
 
     if 'Alt' in res.columns:
-        alt_rate = res['Alt'].diff() / dt
-        res.loc[alt_rate.abs() > vertical_speed_limit, 'Alt'] = np.nan
+        vz = res['Alt'].diff() / dt
+        bad_step_alt = vz.abs() > vertical_speed_limit
+        bad_point_alt = bad_step_alt | bad_step_alt.shift(-1, fill_value=False)
+        res.loc[bad_point_alt, 'Alt'] = np.nan
         
     res[['Lat', 'Lng', 'Alt']] = res[['Lat', 'Lng', 'Alt']].interpolate().ffill().bfill()
     print(f"Після очистки GPS: {res['Lat'].isna().sum()} пропущених Lat, {res['Lng'].isna().sum()} пропущених Lng, {res['Alt'].isna().sum()} пропущених Alt")
