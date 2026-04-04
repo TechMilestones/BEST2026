@@ -1,7 +1,12 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+from dotenv import load_dotenv
+import os
+
 from src.handlers import get_all_data 
 
+load_dotenv("../ports.env")
+PORT = int(os.getenv("PYTHON_SERVICE_PORT", 8888))
 # Temp function
 def process_data(input_json):
     result = {
@@ -61,6 +66,6 @@ class SimpleHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    server = HTTPServer(('localhost', 8888), SimpleHandler)
-    print('🚀 Server running on http://localhost:8888')
+    server = HTTPServer(('localhost',  PORT), SimpleHandler)
+    print(f'Server running on http://localhost:{PORT}')
     server.serve_forever()
