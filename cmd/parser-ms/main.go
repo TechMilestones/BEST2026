@@ -55,7 +55,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Call to python server to get full data
 	// later there will be env for this
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%s", pyport), "application/json", data_reader)
+	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/api/process", pyport), "application/json", data_reader)
 	if err != nil {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
