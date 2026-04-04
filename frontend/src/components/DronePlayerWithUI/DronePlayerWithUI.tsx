@@ -320,7 +320,7 @@ export default function DronePlayerWithUI({
   const orbitRef = useRef<OrbitControlsImpl>(null!)
   const animationTimeRef = useRef<number>(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isCameraLocked, setIsCameraLocked] = useState(false)
+  const [isCameraLocked, setIsCameraLocked] = useState(true)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [currentIndex, setCurrentIndex] = useState(0)
 

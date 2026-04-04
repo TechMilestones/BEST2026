@@ -53,7 +53,7 @@
     gap: 10px;
 }
 .visual-page_row.row-3d {
-    grid-template-columns: 79.2% 20%;
+    grid-template-columns: 59.3% 40%;
 }
 .visual-page_col {
     display: grid;
@@ -65,6 +65,10 @@
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
     border-radius: 10px;
+}
+.visual-page_item.item-col {
+    display: flex;
+    flex-direction: column;
 }
 
 .visual-page_item_inner {
