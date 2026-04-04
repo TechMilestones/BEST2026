@@ -7,10 +7,13 @@ import (
 	"fmt"
 	logparser "hackaton-test/log-parser"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -41,17 +44,18 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// for _, v := range data.IMU {
-	// 	fmt.Printf("Instance: %d\n", v.Instance)
-	// }
-
 	data_str, err := json.Marshal(&data)
 
 	data_reader := bytes.NewReader(data_str)
 
+	pyport := os.Getenv("PYTHON_SERVICE_PORT")
+	if pyport == "" {
+		pyport = "8888"
+	}
+
 	// Call to python server to get full data
 	// later there will be env for this
-	resp, err := http.Post("http://localhost:8888", "application/json", data_reader)
+	resp, err := http.Post(fmt.Sprintf("http://localhost:%s", pyport), "application/json", data_reader)
 	if err != nil {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
@@ -75,18 +79,27 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if err := godotenv.Load("ports.env"); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+		return
+	}
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("POST /upload-log", uploadLogHandler)
 
+	port := os.Getenv("GO_SERVICE_PORT")
+	if port == "" {
+		port = "8080"
+	}
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: mux,
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
 	}()

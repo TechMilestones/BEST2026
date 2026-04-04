@@ -1,0 +1,29 @@
+services:
+  # The frontend static file server (Vite build)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  # The Python microservice (Calculations)
+  python-server:
+    build:
+      context: ./python-server
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - ./data:/app/data
+      - ./python-server/src/parser-data:/app/parser-data
+
+  # The Go microservice (API / Routes)
+  parser-ms:
+    build:
+      context: ./cmd/parser-ms
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./data:/app/data

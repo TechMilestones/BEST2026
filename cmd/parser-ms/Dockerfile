@@ -1,21 +1,24 @@
-FROM golang:1.25-alpine
+# Use a stable Go version
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-COPY ./go-dataflash/ ./go-dataflash/
-
-# Download dependencies first (cached layer)
+# Copy all go.mod and go.sum files (if they exist at root)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source and build
+# Copy the entire workspace to get shared packages like 'log-parser'
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server ./cmd/server
+
+# Build from the specific subdirectory
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/parser-ms ./cmd/parser-ms
+
+# Final lightweight stage
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/parser-ms .
 
 EXPOSE 8080
 
-CMD ["/app/server"]
+CMD ["./parser-ms"]
 
-# Usage (in project root):
-# docker build -t server -f cmd/server/Dockerfile .
-# docker run --rm -p 8080:8080 server
