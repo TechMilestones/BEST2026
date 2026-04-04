@@ -9,6 +9,7 @@
 *.zip
 *.pdf
 data-processor/
+python-server/src/__pycache__/
 
 !package*.json
 !requirements.txt

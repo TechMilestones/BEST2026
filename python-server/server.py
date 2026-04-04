@@ -3,26 +3,12 @@ import json
 from dotenv import load_dotenv
 import os
 
-from src.handlers import get_all_data
+from src.handlers import get_all_data 
+from dotenv import load_dotenv
+import os
 
 load_dotenv("../ports.env")
 PORT = int(os.getenv("PYTHON_SERVICE_PORT", 8888))
-
-
-# Temp function
-def process_data(input_json):
-    result = {
-        "status": "success",
-        "visualisation_data": ["DATA_FOR_3D_VIZ"],
-        "metrics": {
-            "total_distance": 1234.56,
-            "max_acceleration": 9.81,
-            "max_climb": 100.0,
-            "duration_s": 300.0,
-            "max_speed_horiz": 25.4,
-        },
-    }
-    return result
 
 
 class SimpleHandler(BaseHTTPRequestHandler):
@@ -43,18 +29,14 @@ class SimpleHandler(BaseHTTPRequestHandler):
         try:
             content_length = int(self.headers["Content-Length"])
             body = self.rfile.read(content_length)
-
-            if self.path == "/process":
+            
+   
+            if self.path == '/api/process':
                 data = json.loads(body)
-                result = process_data(data)
-                self._set_headers()
-                self.wfile.write(json.dumps(result).encode("utf-8"))
+                result = get_all_data(data)
 
-            elif self.path == "/test":
-                data = json.loads(body)
-                data = get_all_data()
                 self._set_headers()
-                self.wfile.write(json.dumps(data).encode("utf-8"))
+                self.wfile.write(json.dumps(result).encode('utf-8'))  
 
             else:
                 self.send_error(404, "Endpoint not found")
@@ -66,8 +48,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
 
 
-if __name__ == "__main__":
-    server = HTTPServer(("0.0.0.0", 8888), SimpleHandler)
-    print("Server running on http://0.0.0.0:8888")
+if __name__ == '__main__':
+    server = HTTPServer(('localhost',  PORT), SimpleHandler)
+    print(f'Server running on http://localhost:{PORT}')
     server.serve_forever()
-
