@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "127.0.0.1:3000:3000"
+    environment:
+      - PORT=3000
 
   # The Python microservice (Calculations)
   python-server:
@@ -21,8 +23,7 @@ services:
   # The Go microservice (API / Routes)
   parser-ms:
     build:
-      context: ./cmd/parser-ms
-      dockerfile: Dockerfile
+      dockerfile: cmd/parser-ms/Dockerfile
     ports:
       - "127.0.0.1:8080:8080"
     volumes:

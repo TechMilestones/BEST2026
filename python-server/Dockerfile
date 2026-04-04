@@ -18,6 +18,7 @@ EXPOSE 8888
 
 # Define environment variable
 ENV PYTHONUNBUFFERED=1
+ENV PYTHON_SERVICE_PORT=8888
 
 # Run server.py when the container launches
 CMD ["python", "server.py"]

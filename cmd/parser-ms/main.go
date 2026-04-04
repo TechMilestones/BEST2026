@@ -80,14 +80,13 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	if err := godotenv.Load("ports.env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-		return
+		log.Println("No env file found, using default port 8080")
 	}
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("POST /upload-log", uploadLogHandler)
+	mux.HandleFunc("GET /api/gms/health", healthHandler)
+	mux.HandleFunc("POST /api/upload-log", uploadLogHandler)
 
 	port := os.Getenv("GO_SERVICE_PORT")
 	if port == "" {
@@ -102,7 +101,10 @@ func main() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
+		fmt.Println("Server stopped")
 	}()
+
+	fmt.Println("Server is running on port " + port)
 
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt)
