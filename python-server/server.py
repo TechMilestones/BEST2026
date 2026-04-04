@@ -29,9 +29,6 @@ class SimpleHandler(BaseHTTPRequestHandler):
    
             if self.path == '/process':
                 data = json.loads(body)
-
-                data = read_json_file("src/data_19.json")
-
                 result = get_all_data(data)
 
                 self._set_headers()

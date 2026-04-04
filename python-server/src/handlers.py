@@ -86,7 +86,9 @@ def get_all_data(data):
     return {
         "visualisation_data": visualization_data,
         "metrics": {
-            "max_speed_kmh": 100,
-            "flight_time_seconds": 100,
+            "total_distance_m": 1000,
+            "max_horizontal_acceleration": 5.0,
+            "max_vertical_acceleration": 3.0,
+            "duration_s": 120.0,
         },
     }
