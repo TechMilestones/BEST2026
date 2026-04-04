@@ -13,3 +13,6 @@ python-server/src/__pycache__/
 
 !package*.json
 go-dataflash/
+
+.env
+__pycache__/

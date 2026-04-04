@@ -1,5 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+from dotenv import load_dotenv
+import os
+
 from src.handlers import get_all_data 
 from dotenv import load_dotenv
 import os
