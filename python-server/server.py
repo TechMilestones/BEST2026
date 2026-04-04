@@ -2,20 +2,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from src.handlers import get_all_data 
 
-# Temp function
-def process_data(input_json):
-    result = {
-        "status": "success",
-        "visualisation_data": ["DATA_FOR_3D_VIZ"],
-        "metrics": {
-            "total_distance": 1234.56,
-            "max_acceleration": 9.81,
-            "max_climb": 100.0,
-            "duration_s": 300.0,
-            "max_speed_horiz": 25.4
-        }
-    }
-    return result
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type='application/json'):
@@ -39,7 +25,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
    
             if self.path == '/process':
                 data = json.loads(body)
-                result = process_data(data)
+                result = get_all_data(data)
                 self._set_headers()
                 self.wfile.write(json.dumps(result).encode('utf-8'))
 
