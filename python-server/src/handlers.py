@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.final_calculations_for_3d import final_calculations_for_3d
+from src.metrics_calculation import calculate_metrics
 
 
 def build_dataframes_from_json(json_input):
@@ -82,13 +83,9 @@ def get_all_data(data):
 
     visualization_df = final_calculations_for_3d(df_att, df_imu_0, df_imu_1, df_gps)
     visualization_data = dataframe_to_json_records(visualization_df)
+    metrics = calculate_metrics(visualization_df, df_gps)
 
     return {
         "visualisation_data": visualization_data,
-        "metrics": {
-            "total_distance_m": 1000,
-            "max_horizontal_acceleration": 5.0,
-            "max_vertical_acceleration": 3.0,
-            "duration_s": 120.0,
-        },
+        "metrics": metrics,
     }
