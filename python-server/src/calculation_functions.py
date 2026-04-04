@@ -12,8 +12,17 @@ import pandas as pd
 from scipy.signal import butter, filtfilt
 from scipy.spatial.transform import Rotation as R
 
-# Calculate distances between GPS points using Haversine formula
+
 def _calculate_step_distances(df):
+    """
+    Haversine formula to calculate distances between GPS points in meters.
+
+    Input: DataFrame with 'Lat' and 'Lng' columns (in degrees).
+    Output: Series of distances in meters between consecutive points.
+
+    Why?
+    It is good for calculating accurate distances on Earth's surface, especially for small to medium distances, as it accounts for Earth's curvature.
+    """
     R = 6371000
     lat1, lon1 = np.radians(df['Lat'].shift(1)), np.radians(df['Lng'].shift(1))
     lat2, lon2 = np.radians(df['Lat']), np.radians(df['Lng'])
@@ -22,8 +31,18 @@ def _calculate_step_distances(df):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
     return R * c
 
-# clean GPS data by removing outliers and interpolating missing values
+
 def get_cleaned_gps_dataframe(df, speed_limit=300.0, vertical_speed_limit=150.0):
+    """
+    Clean GPS data by removing outliers based on speed thresholds and 
+    interpolating missing values.
+
+    Input: DataFrame with 'TimeUS', 'Lat', 'Lng', and optionally 'Alt' columns.
+    Output: Cleaned DataFrame with outliers removed and missing values interpolated.
+
+    Why?
+    GPS data can contain outliers due to signal loss, multipath effects, or other issues.
+    """
     res = df.copy().reset_index(drop=True)
     
     res.loc[(res['Lat'].abs() < 0.1) | (res['Lng'].abs() < 0.1), ['Lat', 'Lng']] = np.nan
@@ -60,6 +79,10 @@ def get_cleaned_gps_dataframe(df, speed_limit=300.0, vertical_speed_limit=150.0)
     return res
 
 def calculate_total_distance(df):
+    """
+    Calculate total distance traveled based on GPS coordinates. 
+    Uses Haversine formula for accurate distance calculation on Earth's surface.
+    """
     clean_df = df.copy()
     distances = _calculate_step_distances(clean_df)
     return float(distances.fillna(0).sum())
@@ -68,16 +91,24 @@ def calculate_total_distance(df):
 
 def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     """
-    Професійне обчислення швидкості БПЛА на основі IMU та Attitude (кватерніонів).
-    Враховує Sensor Fusion, цифрову фільтрацію та усунення дрейфу.
+    Calculate velocity by integrating accelerometer data, using attitude for frame transformation.
+
+    Input:
+    - df_imu_0, df_imu_1: DataFrames with 'TimeUS', 'AccX', 'AccY', 'AccZ' columns from two IMUs.
+    - df_att: DataFrame with 'TimeUS' and either quaternion ('q_x', 'q_y', 'q_z', 'q_w') or Euler angles ('Roll', 'Pitch', 'Yaw') for orientation.
+    Output: DataFrame with 'TimeUS', 'v_x', 'v_y', 'v_z', and optionally 'v_mag' for velocity magnitude.
+
+    Why?
+    We use these calculations to estimate the UAV's velocity profile, which is essential for performance analysis and visualization.
+
     """
-    
+    # Combine IMU data by averaging the two instances, aligning on TimeUS.
     imu_combined = pd.merge_asof(
         df_imu_0[['TimeUS', 'AccX', 'AccY', 'AccZ']].sort_values('TimeUS'),
         df_imu_1[['TimeUS', 'AccX', 'AccY', 'AccZ']].sort_values('TimeUS'),
         on='TimeUS', direction='nearest', suffixes=('_0', '_1')
     )
-    
+    # Mean the two IMU readings to get a single estimate of acceleration, which can help reduce noise and mitigate individual sensor errors.
     df_imu = pd.DataFrame({
         'TimeUS': imu_combined['TimeUS'],
         'AccX': (imu_combined['AccX_0'] + imu_combined['AccX_1']) / 2.0,
@@ -85,6 +116,7 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
         'AccZ': (imu_combined['AccZ_0'] + imu_combined['AccZ_1']) / 2.0,
     })
 
+    # Merge IMU data with attitude data to get orientation for each timestamp, using nearest neighbor matching.
     df = pd.merge_asof(
         df_imu.sort_values('TimeUS'), 
         df_att.sort_values('TimeUS'), 
@@ -96,6 +128,8 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     dt_seconds = df['TimeUS'].diff() / 1_000_000.0
     dt_seconds = dt_seconds[(dt_seconds > 0) & np.isfinite(dt_seconds)]
     fs = float(1.0 / dt_seconds.median()) if not dt_seconds.empty else 50.0
+
+    # Apply a low-pass Butterworth filter to the accelerometer data to reduce noise before integration. 
     cutoff = 4.0
     try:
         # Keep normalized cutoff in (0, 1) even if estimated fs is low/noisy.
@@ -107,7 +141,7 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
             df[col] = filtfilt(b, a, df[col].ffill().fillna(0))
     except Exception as e:
         print(f"Filter error: {e}")
-
+    #
     if all(col in df.columns for col in ['q_x', 'q_y', 'q_z', 'q_w']):
         quats = df[['q_x', 'q_y', 'q_z', 'q_w']].values
         rotations = R.from_quat(quats)
@@ -129,6 +163,7 @@ def calculate_speeds_from_accel(df_imu_0, df_imu_1, df_att):
     a_z_pure = az_e - np.median(az_e[:n_init])
 
 
+    # Integrate acceleration to get velocity using the trapezoidal rule, which is more accurate than simple Euler integration, especially for non-uniform time steps. We also apply a simple velocity threshold to mitigate drift and unrealistic spikes in velocity estimates.
     dt = df['TimeUS'].diff().fillna(0).values / 1_000_000.0
     v_x, v_y, v_z = np.zeros(len(df)), np.zeros(len(df)), np.zeros(len(df))
     
