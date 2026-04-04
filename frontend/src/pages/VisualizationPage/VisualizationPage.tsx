@@ -19,7 +19,7 @@ export default function VisualizationPage() {
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null)
 
   useEffect(() => {
-    fetch('/data.json')
+    fetch('/data2.json')
       .then(res => res.json())
       .then(data => {
         const cleanData = data.map((row: any) => ({

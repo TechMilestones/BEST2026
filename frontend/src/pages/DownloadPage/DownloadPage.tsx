@@ -1,9 +1,7 @@
-import { useState } from "react";
 import "./DownloadPage.css";
 import { useNavigate } from "react-router-dom";
 
 export default function DownloadPage() {
-  const [file, setFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -15,12 +13,32 @@ export default function DownloadPage() {
     input?.click();
   };
 
-  const processFile = (file: File | null) => {
+  const processFile = async (file: File | null) => {
     if (!file) return;
 
-    setFile(file);
-    console.log(file.name);
-    navigate('/visual');
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(
+        `/upload-log?file_name=${encodeURIComponent(file.name)}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      navigate("/visual");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
 
   const getData = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,12 +61,13 @@ export default function DownloadPage() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {!file && "Drop file here or click to upload"}
+        {"Drop file here or click to upload"}
       </div>
 
       <input
         id="fileInput"
         type="file"
+        accept=".BIN"
         className="drag-and-drop_input"
         onChange={getData}
       />
