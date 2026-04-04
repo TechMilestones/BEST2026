@@ -12,3 +12,6 @@ data-processor/
 
 !package*.json
 go-dataflash/
+
+.env
+__pycache__/

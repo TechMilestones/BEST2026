@@ -27,14 +27,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	// Set the maximum size of the request body to 10 MiB
 	r.ParseMultipartForm(10 << 20)
 
-	queries := r.URL.Query()
-	file_name := queries.Get("file_name")
-	if file_name == "" {
-		JSONErrorResp(w, http.StatusBadRequest, "Error reading file name")
-		return
-	}
-
-	f, _, err := r.FormFile(file_name)
+	f, _, err := r.FormFile("file")
 	if err != nil {
 		JSONErrorResp(w, http.StatusBadRequest, "Error reading file")
 		return
@@ -53,7 +46,8 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	data_reader := bytes.NewReader(data_str)
 
 	// Call to python server to get full data
-	resp, err := http.Post("http://localhost:8081", "application/json", data_reader)
+	// later there will be env for this
+	resp, err := http.Post("http://localhost:8888", "application/json", data_reader)
 	if err != nil {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
