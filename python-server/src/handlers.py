@@ -1,11 +1,11 @@
 import pandas as pd
 from pathlib import Path
 
-from final_calculations_for_3d import final_calculations_for_3d
+from src.final_calculations_for_3d import final_calculations_for_3d
 
 
 def get_all_data():
-    data_dir = Path("parser-data")
+    data_dir = Path("src/parser-data")
     flight_session_names = ["00000001", "00000019"]
 
     for session in flight_session_names:
