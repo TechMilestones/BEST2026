@@ -3,6 +3,10 @@ import json
 from src.handlers import get_all_data 
 
 
+def read_json_file(filename):
+    with open(filename, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 class SimpleHandler(BaseHTTPRequestHandler):
     def _set_headers(self, content_type='application/json'):
         self.send_response(200)
@@ -25,7 +29,11 @@ class SimpleHandler(BaseHTTPRequestHandler):
    
             if self.path == '/process':
                 data = json.loads(body)
+
+                data = read_json_file("src/data_19.json")
+
                 result = get_all_data(data)
+
                 self._set_headers()
                 self.wfile.write(json.dumps(result).encode('utf-8'))
 
