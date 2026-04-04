@@ -8,7 +8,7 @@ import (
 )
 
 type GPSData struct {
-	Instance int     `json:"instance"`
+	Instance uint8   `json:"instance"`
 	TimeUS   int64   `json:"time_us"`
 	Lat      float64 `json:"lat"`
 	Lng      float64 `json:"lng"`
@@ -16,7 +16,7 @@ type GPSData struct {
 }
 
 type IMUData struct {
-	Instance int     `json:"instance"`
+	Instance uint8   `json:"instance"`
 	TimeUS   int64   `json:"time_us"`
 	AccX     float32 `json:"acc_x"`
 	AccY     float32 `json:"acc_y"`
@@ -24,7 +24,7 @@ type IMUData struct {
 }
 
 type ATTData struct {
-	Instance int     `json:"instance"`
+	Instance uint8   `json:"instance"`
 	TimeUS   int64   `json:"time_us"`
 	Roll     float32 `json:"roll"`
 	Pitch    float32 `json:"pitch"`
@@ -68,10 +68,10 @@ func Parse(r io.ReadSeeker) (*LogData, error) {
 		timeUs := int64(timeUsRaw.(float64) * 1000000)
 
 		instRaw, _, _ := msg.GetScaled("I")
-		instance := 0
+		instance := uint8(0)
 		if instRaw != nil {
-			if v, ok := instRaw.(float64); ok {
-				instance = int(v)
+			if v, ok := instRaw.(uint8); ok {
+				instance = v
 			}
 		}
 

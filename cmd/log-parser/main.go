@@ -59,7 +59,7 @@ func writeGPS(baseName string, data []logparser.GPSData) {
 	}()
 
 	for _, d := range data {
-		w, ok := writers[d.Instance]
+		w, ok := writers[int(d.Instance)]
 		if !ok {
 			fileName := fmt.Sprintf("%s_gps_%d.csv", baseName, d.Instance)
 			f, err := os.Create(fileName)
@@ -69,8 +69,8 @@ func writeGPS(baseName string, data []logparser.GPSData) {
 			}
 			w = csv.NewWriter(f)
 			w.Write([]string{"TimeUS", "Lat", "Lng", "Alt"})
-			writers[d.Instance] = w
-			files[d.Instance] = f
+			writers[int(d.Instance)] = w
+			files[int(d.Instance)] = f
 			fmt.Println(fileName)
 		}
 		w.Write([]string{
@@ -95,7 +95,7 @@ func writeIMU(baseName string, data []logparser.IMUData) {
 	}()
 
 	for _, d := range data {
-		w, ok := writers[d.Instance]
+		w, ok := writers[int(d.Instance)]
 		if !ok {
 			fileName := fmt.Sprintf("%s_imu_%d.csv", baseName, d.Instance)
 			f, err := os.Create(fileName)
@@ -105,8 +105,8 @@ func writeIMU(baseName string, data []logparser.IMUData) {
 			}
 			w = csv.NewWriter(f)
 			w.Write([]string{"TimeUS", "AccX", "AccY", "AccZ"})
-			writers[d.Instance] = w
-			files[d.Instance] = f
+			writers[int(d.Instance)] = w
+			files[int(d.Instance)] = f
 			fmt.Println(fileName)
 		}
 		w.Write([]string{
@@ -131,7 +131,7 @@ func writeATT(baseName string, data []logparser.ATTData) {
 	}()
 
 	for _, d := range data {
-		w, ok := writers[d.Instance]
+		w, ok := writers[int(d.Instance)]
 		if !ok {
 			fileName := fmt.Sprintf("%s_att_%d.csv", baseName, d.Instance)
 			f, err := os.Create(fileName)
@@ -141,8 +141,8 @@ func writeATT(baseName string, data []logparser.ATTData) {
 			}
 			w = csv.NewWriter(f)
 			w.Write([]string{"TimeUS", "Roll", "Pitch", "Yaw"})
-			writers[d.Instance] = w
-			files[d.Instance] = f
+			writers[int(d.Instance)] = w
+			files[int(d.Instance)] = f
 			fmt.Println(fileName)
 		}
 		w.Write([]string{

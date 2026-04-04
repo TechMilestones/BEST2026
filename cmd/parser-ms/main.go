@@ -41,6 +41,10 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, v := range data.IMU {
+	// 	fmt.Printf("Instance: %d\n", v.Instance)
+	// }
+
 	data_str, err := json.Marshal(&data)
 
 	data_reader := bytes.NewReader(data_str)
@@ -49,6 +53,11 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	// later there will be env for this
 	resp, err := http.Post("http://localhost:8888", "application/json", data_reader)
 	if err != nil {
+		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
 	}
