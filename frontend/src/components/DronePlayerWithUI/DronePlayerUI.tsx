@@ -1,40 +1,111 @@
 import React from 'react'
 import { type FlightData } from '../../context/VisualizationContext'
+// --- Colors ---
+const COLORS = {
+  panel: '#171A1E',
+  panelBorder: 'rgba(255,255,255,0.06)',
+
+  text: '#E5E7EB',
+  mutedText: '#9CA3AF',
+
+  button: '#1F2933',
+  buttonHover: '#27303A',
+  buttonActive: '#2F3A45',
+
+  accent: '#3B82F6',
+  accentSoft: 'rgba(59, 130, 246, 0.18)',
+
+  dangerSoft: 'rgba(239, 68, 68, 0.16)',
+
+  slider: '#3B82F6',
+}
 
 // --- Styles ---
-const playButtonStyle = (color: string): React.CSSProperties => ({
-  background: color, border: 'none', borderRadius: '6px', color: '#000',
-  width: '30px', height: '30px', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'sans-serif',
-  fontSize: '14px', alignSelf: 'center', transition: 'all 0.2s',
+const baseButtonStyle: React.CSSProperties = {
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '10px',
+  color: COLORS.text,
+  cursor: 'pointer',
+  fontWeight: 600,
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '14px',
+  transition: 'all 0.2s ease',
+  background: COLORS.button,
+}
+
+const playButtonStyle = (isPlaying: boolean): React.CSSProperties => ({
+  ...baseButtonStyle,
+  width: '42px',
+  height: '42px',
+  fontSize: '16px',
+  background: isPlaying ? COLORS.dangerSoft : COLORS.accentSoft,
+  border: `1px solid ${isPlaying ? 'rgba(239,68,68,0.25)' : 'rgba(96,165,250,0.25)'}`,
+  color: COLORS.text,
 })
 
-const pinButtonStyle = (color: string): React.CSSProperties => ({
-  background: color, border: 'none', borderRadius: '6px', color: '#000',
-  width: '180px', height: '30px', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'sans-serif',
-  fontSize: '14px', alignSelf: 'center', transition: 'all 0.2s',
+const pinButtonStyle = (isCameraLocked: boolean): React.CSSProperties => ({
+  ...baseButtonStyle,
+  minWidth: '190px',
+  height: '42px',
+  padding: '0 16px',
+  background: isCameraLocked ? COLORS.accentSoft : COLORS.button,
+  border: `1px solid ${isCameraLocked ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.08)'}`,
+  color: COLORS.text,
 })
 
 const uiContainerStyle: React.CSSProperties = {
-  position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-  width: '100%', maxWidth: '600px', background: '#171A1E',
-  padding: '20px', borderRadius: '12px', color: 'white',
-  fontFamily: 'Segoe UI, Roboto, sans-serif', boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-  backdropFilter: 'blur(5px)', border: '1px solid rgba(255,255,255,0.1)', zIndex: 100,
+  position: 'absolute',
+  bottom: '24px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: 'calc(100% - 32px)',
+  maxWidth: '680px',
+  background: COLORS.panel,
+  padding: '16px',
+  borderRadius: '10px',
+  color: COLORS.text,
+  fontFamily: 'Inter, sans-serif',
+  boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+  backdropFilter: 'blur(6px)',
+  border: `1px solid ${COLORS.panelBorder}`,
+  zIndex: 100,
+  boxSizing: 'border-box',
 }
 
-const uiRowStyle: React.CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+const uiTopRowStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  marginBottom: '12px',
 }
-const uiRowGridStyle: React.CSSProperties = {
-  display: 'grid', gridTemplateColumns: 'auto auto auto', gap: '10px'
+
+const uiBottomRowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '42px minmax(190px, auto) 1fr',
+  gap: '12px',
+  alignItems: 'center',
 }
+
 const uiColStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'center',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  gap: '6px',
+  minWidth: 0,
 }
 
-const sliderStyle = {
-  width: '100%', cursor: 'pointer', accentColor: '#00bcd4', height: '8px'
-} as React.CSSProperties
+const labelStyle: React.CSSProperties = {
+  fontSize: '12px',
+  color: COLORS.mutedText,
+  lineHeight: 1.2,
+}
+
+const sliderStyle: React.CSSProperties = {
+  width: '100%',
+  cursor: 'pointer',
+  accentColor: COLORS.slider,
+  height: '8px',
+}
 
 // --- Component ---
 interface DronePlayerUIProps {
@@ -64,7 +135,7 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
 }) => {
   return (
     <div style={uiContainerStyle}>
-      <div style={uiRowStyle}>
+      <div style={uiTopRowStyle}>
         <input
           type="range" min="0" max={flightData.length - 1} step={0.01}
           value={currentIndex}
@@ -82,23 +153,23 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
         />
       </div>
 
-      <div style={uiRowGridStyle}>
+      <div style={uiBottomRowStyle}>
         <button
           onClick={() => setIsPlaying(!isPlaying)}
-          style={playButtonStyle(isPlaying ? '#ff4444' : '#44ff44')}
+          style={playButtonStyle(isPlaying)}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
 
         <button
           onClick={() => setIsCameraLocked(!isCameraLocked)}
-          style={pinButtonStyle(isCameraLocked ? '#00bcd4' : '#666')}
+          style={pinButtonStyle(isCameraLocked)}
         >
           {isCameraLocked ? '🔓 Відвязати камеру' : '🔒 Привязати камеру'}
         </button>
 
         <div style={uiColStyle}>
-          <label style={{ fontSize: '12px', flex: 1 }}>
+          <label style={labelStyle}>
             Швидкість: <b>{playbackSpeed.toFixed(1)}x</b>
           </label>
           <input

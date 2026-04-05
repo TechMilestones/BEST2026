@@ -32,11 +32,11 @@ export default function VisualizationPage() {
     <div className='visual-page'>
       <header className='visual-page_header'>
         <h1 className="visual-page_title">FPV DASHBOARD</h1>
-        <button className='visual-page_back-btn' onClick={() => navigate("/")}>Back</button>
+        <button className='visual-page_back-btn' onClick={() => navigate("/")}>Назад</button>
       </header>
       <div className='visual-page_row row-3d'>
-        <div className="visual-page_item">
-          <div className='visual-page_item_title'>3D ВІЗУАЛІЗАЦІЯ</div>
+        <div className="visual-page_item item-3d">
+          <div className='visual-page_item_title title-3d'>3D ВІЗУАЛІЗАЦІЯ</div>
           <DronePlayerWithUI
             flightData={flightData}
             objUrl='/modelka/12217_rocket_v1_l1.obj'
@@ -67,10 +67,10 @@ export default function VisualizationPage() {
 
       </div>
 
-      <div className='visual-page_row'>
+      <div className='visual-page_row row-default'>
         <div className="visual-page_item">
           <div className='visual-page_item_title'>ДАНІ ПРО ПОЛІТ</div>
-          <div className="visual-page_item_inner all-col">
+          <div className="visual-page_item_inner three-col">
             <StaticMetric label="Загальна дистанція" value={metrics?.total_distance} unit="м" />
             <StaticMetric label="Макс. гор. швидкість" value={metrics?.max_horizontal_speed} unit="м/c" />
             <StaticMetric label="Макс. верт. швидкість" value={metrics?.max_vertical_speed} unit="м/c" />
@@ -79,12 +79,10 @@ export default function VisualizationPage() {
             <StaticMetric label="Тривалість польоту" value={metrics?.duration_s} unit="c" />
           </div>
         </div>
-      </div>
 
-      <div className="visual-page_col">
         <div className="visual-page_item">
           <div className='visual-page_item_title'>ТЕЛЕМЕТРІЯ</div>
-          <div className="visual-page_item_inner one-col">
+          <div className="visual-page_item_inner two-col">
             <TelemetryValue label="ШВИДКІСТЬ" unit="м/c" getValue={useCallback(t => t.speedMs, [])} />
             <TelemetryValue label="ВИСОТА" unit="м" getValue={useCallback(t => t.altitudeM, [])} />
             <TelemetryValue label="ШИРОТА" toFixed={6} getValue={useCallback(t => t.lat, [])} />

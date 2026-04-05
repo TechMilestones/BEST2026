@@ -40,7 +40,7 @@ export default function DronePlayerWithUI({
   const hasData = !!(flightData && flightData.length > 0)
 
   return (
-    <div style={{ width: '100%', aspectRatio: '16/9', background: '#818080', position: 'relative' }}>
+    <div style={{ width: '100%', aspectRatio: '16/9', background: '#818080', position: 'relative', borderBottomLeftRadius: "10px", borderBottomRightRadius: "10px" }}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 60, near: 0.1, far: 5000 }}
         shadows

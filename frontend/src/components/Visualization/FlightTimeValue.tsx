@@ -23,8 +23,8 @@ export const FlightTimeValue = () => {
 
   return (
     <div className="visual-page_item_value">
-      <span ref={elapsedRef}>00:00.000</span>
       <p ref={remainingRef}>Залишилося: —</p>
+      <span ref={elapsedRef}>00:00.000</span>
     </div>
   );
 };
