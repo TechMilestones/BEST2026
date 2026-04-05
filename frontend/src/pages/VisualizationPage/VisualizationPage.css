@@ -69,7 +69,30 @@
 }
 .visual-page_item.item-3d {
     padding: 20px 0 0;
-    
+}
+
+.visual-page_item_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 16px;
+    gap: 12px;
+}
+
+.visual-page_model-select {
+    min-width: 180px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 14px;
+    font-family: "Inter", sans-serif;
+    outline: none;
+}
+
+.visual-page_model-select option {
+    color: #000;
 }
 
 .visual-page_item.item-col {

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import './VisualizationPage.css'
 import { useNavigate } from 'react-router-dom';
 import { useVisualizationContext, type TelemetryData } from '../../context/VisualizationContext';
@@ -8,9 +8,32 @@ import { TelemetryValue } from '../../components/Visualization/TelemetryValue';
 import { FlightTimeValue } from '../../components/Visualization/FlightTimeValue';
 import { StaticMetric } from '../../components/Visualization/StaticMetric';
 
+const modelOptions = [
+  {
+    key: 'rocket',
+    label: 'Ракета',
+    objUrl: '/modelka/12217_rocket_v1_l1.obj',
+    textureUrl: '/modelka/rocket.jpg',
+    scale: 0.005,
+  },
+  {
+    key: 'drone',
+    label: 'Дрон',
+    objUrl: '/modelka/fpv_cubed.obj',
+    textureUrl: '/modelka/fpv_3.png',
+    scale: 0.5,
+  },
+]
+
 export default function VisualizationPage() {
   const { flightData, metrics, updateTelemetry } = useVisualizationContext()
+  const [selectedModelKey, setSelectedModelKey] = useState(modelOptions[0].key)
   const navigate = useNavigate()
+
+  const selectedModel = useMemo(
+    () => modelOptions.find((model) => model.key === selectedModelKey) ?? modelOptions[0],
+    [selectedModelKey]
+  )
 
   // Expensive data preparation memoized
   const { timeData, speedData, heightData } = useMemo(() => {
@@ -36,11 +59,25 @@ export default function VisualizationPage() {
       </header>
       <div className='visual-page_row row-3d'>
         <div className="visual-page_item item-3d">
-          <div className='visual-page_item_title title-3d'>3D ВІЗУАЛІЗАЦІЯ</div>
+          <div className="visual-page_item_header">
+            <div className='visual-page_item_title title-3d'>3D ВІЗУАЛІЗАЦІЯ</div>
+            <select
+              className="visual-page_model-select"
+              value={selectedModelKey}
+              onChange={(e) => setSelectedModelKey(e.target.value)}
+            >
+              {modelOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <DronePlayerWithUI
             flightData={flightData}
-            objUrl='/modelka/12217_rocket_v1_l1.obj'
-            textureUrl='/modelka/rocket.jpg'
+            objUrl={selectedModel.objUrl}
+            textureUrl={selectedModel.textureUrl}
+            scale={selectedModel.scale}
             onTelemetry={handleTelemetry}
           />
         </div>

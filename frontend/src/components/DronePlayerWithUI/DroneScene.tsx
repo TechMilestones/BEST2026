@@ -19,6 +19,7 @@ export interface DroneSceneProps {
   animationTimeRef: React.MutableRefObject<number>
   objUrl: string
   textureUrl: string
+  scale?: number | [number, number, number]
   showSatelliteMap: boolean
   onTelemetry?: (t: TelemetryData) => void
 }
@@ -34,14 +35,24 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
   animationTimeRef,
   objUrl,
   textureUrl,
+  scale,
   showSatelliteMap,
   onTelemetry,
 }) => {
   const droneRef = useRef<THREE.Group>(null!)
   const gridRef = useRef<THREE.Mesh>(null!)
   const onTelemetryRef = useRef(onTelemetry)
+  const prevLockedRef = useRef(isCameraLocked)
+  const zoomDistanceRef = useRef(50)
   
   useEffect(() => { onTelemetryRef.current = onTelemetry }, [onTelemetry])
+
+  useEffect(() => {
+    if (isCameraLocked && !prevLockedRef.current) {
+      zoomDistanceRef.current = Math.max(zoomDistanceRef.current * 0.5, 0.5)
+    }
+    prevLockedRef.current = isCameraLocked
+  }, [isCameraLocked])
 
   const { points, colors } = useMemo(() => {
     const pts = data.map((d) => new THREE.Vector3(d.x_m, d.z_m, -d.y_m))
@@ -119,7 +130,7 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
       {showSatelliteMap && hasGeoData && <SatelliteMapLayer data={data} />}
 
       <Suspense fallback={null}>
-        <DroneModel ref={droneRef} objUrl={objUrl} textureUrl={textureUrl} scale={0.005} />
+        <DroneModel ref={droneRef} objUrl={objUrl} textureUrl={textureUrl} scale={scale ?? 0.005} />
       </Suspense>
 
       {points.length >= 2 && (

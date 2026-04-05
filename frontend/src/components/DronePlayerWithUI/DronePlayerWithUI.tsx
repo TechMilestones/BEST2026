@@ -12,6 +12,7 @@ interface Props {
   flightData?: FlightData[]
   objUrl?: string
   textureUrl?: string
+  scale?: number | [number, number, number]
   /** Викликається щокадру з поточними даними телеметрії */
   onTelemetry?: (t: TelemetryData) => void
 }
@@ -20,6 +21,7 @@ export default function DronePlayerWithUI({
   flightData,
   objUrl = '/fpv_cubed.obj',
   textureUrl = '/fpv_3.png',
+  scale,
   onTelemetry,
 }: Props) {
   const orbitRef = useRef<OrbitControlsImpl>(null!)
@@ -74,6 +76,7 @@ export default function DronePlayerWithUI({
               animationTimeRef={animationTimeRef}
               objUrl={objUrl}
               textureUrl={textureUrl}
+              scale={scale}
               showSatelliteMap={isSatelliteMapEnabled && hasGeoData}
               onTelemetry={onTelemetry}
             />
