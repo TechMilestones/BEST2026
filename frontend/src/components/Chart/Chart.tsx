@@ -6,11 +6,13 @@ interface TelemetryChartProps {
   current_y?: number,
   x_array: number[],
   y_array: number[],
-  title: string
+  title: string,
+  xAxis: string,
+  yAxis: string
 }
 
 const TelemetryChart = forwardRef<ReactECharts, TelemetryChartProps>(
-  ({ current_x, current_y, x_array, y_array, title }, ref) => {
+  ({ current_x, current_y, x_array, y_array, title, xAxis, yAxis }, ref) => {
     const option = useMemo(() => ({
       title: {
         text: title,
@@ -22,10 +24,14 @@ const TelemetryChart = forwardRef<ReactECharts, TelemetryChartProps>(
         type: 'category',
         data: x_array,
         axisLabel: { color: '#9CA3AF' },
+        name: xAxis,
+        nameTextStyle: { color: '#9CA3AF' },
       },
       yAxis: {
         type: 'value',
         axisLabel: { color: '#9CA3AF' },
+        name: yAxis,
+        nameTextStyle: { color: '#9CA3AF' },
       },
       series: [
         {
@@ -54,7 +60,7 @@ const TelemetryChart = forwardRef<ReactECharts, TelemetryChartProps>(
         bottom: 25,
       },
       backgroundColor: '#171A1E',
-    }), [current_x, current_y, x_array, y_array, title]);
+    }), [current_x, current_y, x_array, y_array, title, xAxis, yAxis]);
 
     return (
       <ReactECharts

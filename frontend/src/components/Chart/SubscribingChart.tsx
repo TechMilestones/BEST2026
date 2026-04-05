@@ -9,6 +9,8 @@ interface SubscribingChartProps {
     y_array: number[];
     getX: (t: TelemetryData) => number;
     getY: (t: TelemetryData) => number;
+    xAxis: string;
+    yAxis: string;
 }
 
 const SubscribingChart = ({
@@ -16,7 +18,9 @@ const SubscribingChart = ({
     x_array,
     y_array,
     getX,
-    getY
+    getY,
+    xAxis,
+    yAxis
 }: SubscribingChartProps) => {
     const { subscribeTelemetry } = useVisualizationContext();
     const chartRef = useRef<ReactECharts>(null);
@@ -55,6 +59,8 @@ const SubscribingChart = ({
             // Passing initial/null values is fine as the imperative update kicks in immediately
             current_x={0}
             current_y={0}
+            xAxis={xAxis}
+            yAxis={yAxis}
         />
     );
 };

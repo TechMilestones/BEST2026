@@ -54,6 +54,8 @@ export default function VisualizationPage() {
               y_array={speedData}
               getX={useCallback((t: TelemetryData) => t.elapsedSec * 50, [])}
               getY={useCallback((t: TelemetryData) => t.speedMs, [])}
+              xAxis='Час, с'
+              yAxis='Швидкість, м/с'
             />
             <SubscribingChart
               title="Залежність висоти від часу"
@@ -61,6 +63,8 @@ export default function VisualizationPage() {
               y_array={heightData}
               getX={useCallback((t: TelemetryData) => t.elapsedSec * 50, [])}
               getY={useCallback((t: TelemetryData) => t.altitudeM, [])}
+              xAxis='Час, с'
+              yAxis='Висота, м'
             />
           </div>
         </div>
