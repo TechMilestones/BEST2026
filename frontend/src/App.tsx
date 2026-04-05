@@ -6,6 +6,10 @@ import { VisualizationProvider } from "./context/VisualizationContext";
 import NotFoundPage from "./pages/NotFoundPage/NotFoundPage";
 
 function App() {
+  if (!window.location.hash) {
+    window.location.replace('/#/')
+  }
+
   return (
     <div className="app">
       <VisualizationProvider>

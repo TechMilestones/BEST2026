@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './VisualizationPage.css'
 import { useNavigate } from 'react-router-dom';
 import { useVisualizationContext, type TelemetryData } from '../../context/VisualizationContext';
@@ -7,6 +7,7 @@ import SubscribingChart from '../../components/Chart/SubscribingChart';
 import { TelemetryValue } from '../../components/Visualization/TelemetryValue';
 import { FlightTimeValue } from '../../components/Visualization/FlightTimeValue';
 import { StaticMetric } from '../../components/Visualization/StaticMetric';
+import { isDbEmpty } from '../../utils/indexedDbStorage';
 
 const modelOptions = [
   {
@@ -28,7 +29,24 @@ const modelOptions = [
 export default function VisualizationPage() {
   const { flightData, metrics, updateTelemetry } = useVisualizationContext()
   const [selectedModelKey, setSelectedModelKey] = useState(modelOptions[0].key)
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const checkDb = async () => {
+      try {
+        const empty = await isDbEmpty();
+
+        if (empty) {
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Failed to check IndexedDB:", error);
+        navigate("/");
+      }
+    };
+
+    checkDb();
+  }, [navigate]);
 
   const selectedModel = useMemo(
     () => modelOptions.find((model) => model.key === selectedModelKey) ?? modelOptions[0],

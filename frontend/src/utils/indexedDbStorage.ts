@@ -54,3 +54,22 @@ export async function setStoredValue<T>(key: string, value: T): Promise<void> {
     console.error("IndexedDB write error", error);
   }
 }
+
+export async function isDbEmpty(): Promise<boolean> {
+  const db = await openDb();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+
+    const countRequest = store.count();
+
+    countRequest.onsuccess = () => {
+      resolve(countRequest.result === 0);
+    };
+
+    countRequest.onerror = () => {
+      reject(countRequest.error);
+    };
+  });
+}
