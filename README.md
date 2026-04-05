@@ -2,7 +2,7 @@
 
 ## Introduction
 
-
+In modern unmanned aviation, the ability to analyze flight data in detail is critical for ensuring safety, optimizing performance, and diagnosing systems. Beyond civilian applications, drones have also become a staple of modern warfare, making tools for sensor data analysis even more vital. This project is dedicated to developing tools for processing, analyzing, and visualizing telemetry received from unmanned aerial vehicles
 
 ## Setup
 
