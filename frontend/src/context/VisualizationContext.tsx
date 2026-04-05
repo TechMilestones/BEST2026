@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 export interface FlightData {
     TimeUS: number
@@ -40,28 +40,50 @@ export interface FlightMetrics {
     total_distance: number;
 }
 
+export type TelemetryListener = (data: TelemetryData) => void;
+
 export interface VisualizationContextProps {
-    telemetry: TelemetryData | null
-    setTelemetry: React.Dispatch<React.SetStateAction<TelemetryData | null>>
     flightData: FlightData[]
     setFlightData: (data: FlightData[]) => void
     metrics: FlightMetrics | null
     setMetrics: (metrics: FlightMetrics) => void
+    // Ref-based telemetry access
+    updateTelemetry: (data: TelemetryData) => void
+    subscribeTelemetry: (listener: TelemetryListener) => () => void
+    getLatestTelemetry: () => TelemetryData | null
 }
 
 const VisualizationContext = createContext<VisualizationContextProps>({
-    telemetry: null,
-    setTelemetry: () => { },
     flightData: [],
     setFlightData: () => { },
     metrics: null,
     setMetrics: () => { },
+    updateTelemetry: () => { },
+    subscribeTelemetry: () => () => { },
+    getLatestTelemetry: () => null,
 })
 
 export function VisualizationProvider({ children }: { children: React.ReactNode }) {
     const [flightData, _setFlightData] = useState<FlightData[]>([])
-    const [telemetry, setTelemetry] = useState<TelemetryData | null>(null)
     const [metrics, _setMetrics] = useState<FlightMetrics | null>(null)
+    
+    // Ref-based state for telemetry to avoid re-renders
+    const telemetryRef = useRef<TelemetryData | null>(null)
+    const listenersRef = useRef<Set<TelemetryListener>>(new Set())
+
+    const updateTelemetry = useCallback((data: TelemetryData) => {
+        telemetryRef.current = data
+        listenersRef.current.forEach(listener => listener(data))
+    }, [])
+
+    const subscribeTelemetry = useCallback((listener: TelemetryListener) => {
+        listenersRef.current.add(listener)
+        return () => {
+            listenersRef.current.delete(listener)
+        }
+    }, [])
+
+    const getLatestTelemetry = useCallback(() => telemetryRef.current, [])
 
     useEffect(() => {
         const visualization_serial = sessionStorage.getItem("visualization_data")
@@ -85,7 +107,7 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
         }
     }, [])
 
-    const setFlightData = (data: FlightData[]) => {
+    const setFlightData = useCallback((data: FlightData[]) => {
         const sanitizedData = data.map(item => ({
             ...item,
             TimeUS: Number(item.TimeUS),
@@ -102,9 +124,9 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
         }));
         _setFlightData(sanitizedData)
         sessionStorage.setItem("visualization_data", JSON.stringify(sanitizedData))
-    }
+    }, [])
 
-    const setMetrics = (m: FlightMetrics) => {
+    const setMetrics = useCallback((m: FlightMetrics) => {
         const sanitizedMetrics = {
             total_distance: Number(m.total_distance),
             max_horizontal_speed: Number(m.max_horizontal_speed),
@@ -115,17 +137,20 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
         } as FlightMetrics;
         _setMetrics(sanitizedMetrics)
         sessionStorage.setItem("flight_metrics", JSON.stringify(sanitizedMetrics))
-    }
+    }, [])
+
+    const contextValue = useMemo(() => ({
+        flightData,
+        setFlightData,
+        metrics,
+        setMetrics,
+        updateTelemetry,
+        subscribeTelemetry,
+        getLatestTelemetry
+    }), [flightData, setFlightData, metrics, setMetrics, updateTelemetry, subscribeTelemetry, getLatestTelemetry]);
 
     return (
-        <VisualizationContext.Provider value={{
-            telemetry,
-            setTelemetry,
-            flightData,
-            setFlightData,
-            metrics,
-            setMetrics
-        }}>
+        <VisualizationContext.Provider value={contextValue}>
             {children}
         </VisualizationContext.Provider>
     )

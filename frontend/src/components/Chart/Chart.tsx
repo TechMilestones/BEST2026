@@ -1,75 +1,71 @@
+import React, { useMemo, forwardRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 
 interface TelemetryChartProps {
-    current_x?: Number,
-    current_y?: Number,
-    x_array: Array<Number>,
-    y_array: Array<Number>,
-    title: String
+  current_x?: number,
+  current_y?: number,
+  x_array: number[],
+  y_array: number[],
+  title: string
 }
 
-export default function TelemetryChart({ current_x, current_y, x_array, y_array, title } : TelemetryChartProps) {
-  const option = {
-    title: {
-      text: title,
-      textStyle: {
-        color: '#E5E7EB',
+const TelemetryChart = forwardRef<ReactECharts, TelemetryChartProps>(
+  ({ current_x, current_y, x_array, y_array, title }, ref) => {
+    const option = useMemo(() => ({
+      title: {
+        text: title,
+        textStyle: { color: '#E5E7EB' },
       },
-    },
-    tooltip: {
-      trigger: 'axis',
-    },
-    xAxis: {
-      type: 'category',
-      data: x_array,
-      axisLabel: {
-        color: '#9CA3AF',
+      tooltip: { trigger: 'axis' },
+      animation: false,
+      xAxis: {
+        type: 'category',
+        data: x_array,
+        axisLabel: { color: '#9CA3AF' },
       },
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: {
-        color: '#9CA3AF',
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: '#9CA3AF' },
       },
-      data: y_array
-    },
-    series: [
+      series: [
         {
-            type: 'line',
-            data: y_array,
-            smooth: true,
-
-            lineStyle: {
-            color: '#3B82F6',
-            width: 2,
-            },
-
-            itemStyle: {
-            color: '#3B82F6',
-            },
-
-            markPoint: {
+          type: 'line',
+          data: y_array,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: { color: '#3B82F6', width: 2 },
+          itemStyle: { color: '#3B82F6' },
+          markPoint: {
             data: [
-                {
+              {
                 coord: [current_x, current_y],
                 symbol: 'circle',
                 symbolSize: 10,
-                itemStyle: {
-                    color: '#EF4444',
-                },
-                },
+                itemStyle: { color: '#EF4444' },
+              },
             ],
-            },
+          },
         },
-    ],
-    grid: {
+      ],
+      grid: {
         top: 55,
-        left: 10,
-        right: 10,
-        bottom: 10,
-    },
-    backgroundColor: '#171A1E',
-  };
+        left: 40,
+        right: 20,
+        bottom: 25,
+      },
+      backgroundColor: '#171A1E',
+    }), [current_x, current_y, x_array, y_array, title]);
 
-  return <ReactECharts option={option} style={{ height: '44%', width: '100%' }} />;
-}
+    return (
+      <ReactECharts
+        ref={ref}
+        option={option}
+        style={{ height: '44%', width: '100%' }}
+        notMerge={false}
+        lazyUpdate={true}
+      />
+    );
+  }
+);
+
+export default React.memo(TelemetryChart);
