@@ -5,6 +5,7 @@ import { Line, Sphere, Grid } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { type FlightData, type TelemetryData } from '../../context/VisualizationContext'
 import { DroneModel } from './DroneModel'
+import { SatelliteMapLayer } from './SatelliteMapLayer'
 import { getStateAtTime } from './utils'
 
 export interface DroneSceneProps {
@@ -18,6 +19,7 @@ export interface DroneSceneProps {
   animationTimeRef: React.MutableRefObject<number>
   objUrl: string
   textureUrl: string
+  showSatelliteMap: boolean
   onTelemetry?: (t: TelemetryData) => void
 }
 
@@ -32,10 +34,11 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
   animationTimeRef,
   objUrl,
   textureUrl,
+  showSatelliteMap,
   onTelemetry,
 }) => {
   const droneRef = useRef<THREE.Group>(null!)
-  const gridRef = useRef<THREE.Object3D>(null!)
+  const gridRef = useRef<THREE.Mesh>(null!)
   const onTelemetryRef = useRef(onTelemetry)
   
   useEffect(() => { onTelemetryRef.current = onTelemetry }, [onTelemetry])
@@ -50,6 +53,11 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
     })
     return { points: pts, colors: clrs }
   }, [data])
+
+  const hasGeoData = useMemo(
+    () => data.some((point) => typeof point.lat === 'number' && Number.isFinite(point.lat) && typeof point.lon === 'number' && Number.isFinite(point.lon)),
+    [data]
+  )
 
   useFrame((state, delta) => {
     if (data.length < 2) return
@@ -108,13 +116,15 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
 
   return (
     <group>
+      {showSatelliteMap && hasGeoData && <SatelliteMapLayer data={data} />}
+
       <Suspense fallback={null}>
         <DroneModel ref={droneRef} objUrl={objUrl} textureUrl={textureUrl} scale={0.005} />
       </Suspense>
 
       {points.length >= 2 && (
         <>
-          <Line points={points} vertexColors={colors as any} lineWidth={2} />
+          <Line points={points} vertexColors={colors} lineWidth={2} />
           <Sphere args={[0.2]} position={points[0]}>
             <meshBasicMaterial color="lime" />
           </Sphere>
@@ -125,7 +135,8 @@ export const DroneScene: React.FC<DroneSceneProps> = ({
       )}
 
       <Grid
-        ref={gridRef as any}
+        ref={gridRef}
+        visible={!showSatelliteMap}
         infiniteGrid
         followCamera={false}
         cellSize={1}

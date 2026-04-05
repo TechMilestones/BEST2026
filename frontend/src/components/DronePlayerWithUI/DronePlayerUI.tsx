@@ -1,5 +1,6 @@
 import React from 'react'
 import { type FlightData } from '../../context/VisualizationContext'
+import { MapLayerToggle } from './MapLayerToggle'
 // --- Colors ---
 const COLORS = {
   panel: '#171A1E',
@@ -70,6 +71,22 @@ const uiContainerStyle: React.CSSProperties = {
   border: `1px solid ${COLORS.panelBorder}`,
   zIndex: 100,
   boxSizing: 'border-box',
+  position: 'absolute',
+  bottom: '24px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: 'calc(100% - 32px)',
+  maxWidth: '680px',
+  background: COLORS.panel,
+  padding: '16px',
+  borderRadius: '10px',
+  color: COLORS.text,
+  fontFamily: 'Inter, sans-serif',
+  boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+  backdropFilter: 'blur(6px)',
+  border: `1px solid ${COLORS.panelBorder}`,
+  zIndex: 100,
+  boxSizing: 'border-box',
 }
 
 const uiTopRowStyle: React.CSSProperties = {
@@ -118,6 +135,9 @@ interface DronePlayerUIProps {
   setIsCameraLocked: (locked: boolean) => void
   playbackSpeed: number
   setPlaybackSpeed: (speed: number) => void
+  isSatelliteMapEnabled: boolean
+  setIsSatelliteMapEnabled: (enabled: boolean) => void
+  canUseSatelliteMap: boolean
   animationTimeRef: React.MutableRefObject<number>
 }
 
@@ -131,6 +151,9 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
   setIsCameraLocked,
   playbackSpeed,
   setPlaybackSpeed,
+  isSatelliteMapEnabled,
+  setIsSatelliteMapEnabled,
+  canUseSatelliteMap,
   animationTimeRef,
 }) => {
   return (
@@ -150,6 +173,12 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
             }
           }}
           style={{ ...sliderStyle, marginBottom: '12px' }}
+        />
+
+        <MapLayerToggle
+          checked={isSatelliteMapEnabled}
+          disabled={!canUseSatelliteMap}
+          onChange={setIsSatelliteMapEnabled}
         />
       </div>
 
