@@ -71,22 +71,6 @@ const uiContainerStyle: React.CSSProperties = {
   border: `1px solid ${COLORS.panelBorder}`,
   zIndex: 100,
   boxSizing: 'border-box',
-  position: 'absolute',
-  bottom: '24px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  width: 'calc(100% - 32px)',
-  maxWidth: '680px',
-  background: COLORS.panel,
-  padding: '16px',
-  borderRadius: '10px',
-  color: COLORS.text,
-  fontFamily: 'Inter, sans-serif',
-  boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-  backdropFilter: 'blur(6px)',
-  border: `1px solid ${COLORS.panelBorder}`,
-  zIndex: 100,
-  boxSizing: 'border-box',
 }
 
 const uiTopRowStyle: React.CSSProperties = {
