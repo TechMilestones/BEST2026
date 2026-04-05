@@ -22,5 +22,4 @@ COPY --from=build /app/dist /web
 
 # Configuration for static file server
 ENV PORT=3000
-ENV ABSENT_TERMINAL=/index.html
 EXPOSE 3000

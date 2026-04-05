@@ -128,8 +128,9 @@ The system is architected as a **Polyglot Data Pipeline**, prioritizing speciali
    Telemetry visualization requires more than simple interpolation. We implemented a **Signal Processing Pipeline** featuring a 2nd-order Butterworth low-pass filter to mitigate IMU noise and trapezoidal integration for velocity estimation. This ensures the visualization reflects physical flight dynamics rather than raw sensor jitter.
 
 ### 3. Declarative 3D Visualization (React & Three.js)
-   The frontend utilizes React Three Fiber (R3F) for the 3D rendering engine.
-*   **Rationale:** By using a declarative approach to 3D, the flight scene becomes a **pure function of the telemetry data stream**. This eliminates imperative synchronization bugs and allows the drone’s orientation and flight trail to stay perfectly synchronized with the playback timeline.
+*   **Decision:** The frontend utilizes React Three Fiber (R3F) for the 3D rendering engine, using **HashRouter** for client-side navigation.
+*   **Rationale:** We opted for `HashRouter` to ensure **Universal Static Compatibility**. By moving the routing state to the URL hash, the application becomes completely agnostic to the server-side configuration. This guarantees that deep-linking and browser reloads work reliably on any static file server (e.g., lightweight Go servers, Nginx, or GitHub Pages) without requiring `try_files` or rewrite rules.
+
 
 ### 4. Strict No Data Collection Policy
    The project does not collect any data from the user other than the uploaded `.BIN` file and doesn't even store it on the server.

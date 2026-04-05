@@ -8,7 +8,6 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       - PORT=3000
-      - ABSENT_TERMINAL=/index.html
 
   # The Python microservice (Calculations)
   python-server:
