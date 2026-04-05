@@ -19,6 +19,7 @@ import (
 
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("CORS request")
 		allowedOrigin := os.Getenv("CORS_ALLOW_ORIGIN")
 		origin := r.Header.Get("Origin")
 
@@ -60,6 +61,7 @@ func enableCors(next http.Handler) http.Handler {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Health check request")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }
@@ -71,6 +73,8 @@ func JSONErrorResp(w http.ResponseWriter, status int, err_msg string) {
 
 func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 100 << 20 // 100 MiB
+
+	log.Println("Uploading file...")
 
 	// Hard-limit upload body size to avoid unbounded memory/disk usage.
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
@@ -100,6 +104,8 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 		JSONErrorResp(w, http.StatusInternalServerError, "Error parsing log")
 		return
 	}
+
+	log.Println("Data parsed")
 
 	if len(data.GPS) == 0 && len(data.IMU) == 0 && len(data.ATT) == 0 {
 		log.Println("No data found in log")
@@ -160,7 +166,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Println("No env file found, using default port 8080")
+		log.Println("No env file found, using default port")
 	}
 
 	mux := http.NewServeMux()
