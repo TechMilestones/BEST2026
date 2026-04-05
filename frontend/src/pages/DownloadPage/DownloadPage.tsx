@@ -36,11 +36,13 @@ export default function DownloadPage() {
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Помилка завантаження");
+        setError(data.error);
+        return;
       }
 
-      const data = await response.json();
       // console.log(data);
 
       if ("metrics" in data) {
@@ -103,7 +105,7 @@ export default function DownloadPage() {
       />
 
       {error && (<p className="error-message">{error}</p>)}
-      
+
 
       {loading && (
         <div className="loader-overlay">

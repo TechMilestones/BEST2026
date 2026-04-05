@@ -19,7 +19,6 @@ import (
 
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("CORS request")
 		allowedOrigin := os.Getenv("CORS_ALLOW_ORIGIN")
 		origin := r.Header.Get("Origin")
 
@@ -74,25 +73,24 @@ func JSONErrorResp(w http.ResponseWriter, status int, err_msg string) {
 func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 100 << 20 // 100 MiB
 
-	log.Println("Uploading file...")
-
 	// Hard-limit upload body size to avoid unbounded memory/disk usage.
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		if strings.Contains(err.Error(), "http: request body too large") {
-			JSONErrorResp(w, http.StatusRequestEntityTooLarge, "File is too large. Max upload size is 100 MiB")
+			log.Println("Received request with too large body, expected <= 100 MiB")
+			JSONErrorResp(w, http.StatusRequestEntityTooLarge, "Файл завеликий. Максимальний розмір завантаження - 100 Мб")
 			return
 		}
 
 		log.Println("Error parsing multipart form:", err)
-		JSONErrorResp(w, http.StatusBadRequest, "Invalid multipart form data")
+		JSONErrorResp(w, http.StatusBadRequest, "Неправильні дані форми")
 		return
 	}
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
 		log.Println("Error reading file:", err)
-		JSONErrorResp(w, http.StatusBadRequest, "Error reading file")
+		JSONErrorResp(w, http.StatusBadRequest, "Помилка читання файлу")
 		return
 	}
 
@@ -101,7 +99,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := logparser.Parse(f)
 	if err != nil {
 		log.Println("Error parsing log:", err)
-		JSONErrorResp(w, http.StatusInternalServerError, "Error parsing log")
+		JSONErrorResp(w, http.StatusInternalServerError, "Помилка обробки логу")
 		return
 	}
 
@@ -109,14 +107,14 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(data.GPS) == 0 && len(data.IMU) == 0 && len(data.ATT) == 0 {
 		log.Println("No data found in log")
-		JSONErrorResp(w, http.StatusUnprocessableEntity, "No data found in log or incorrect log format")
+		JSONErrorResp(w, http.StatusUnprocessableEntity, "Лог не містить даних або має неправильний формат")
 		return
 	}
 
 	data_str, err := json.Marshal(&data)
 	if err != nil {
 		log.Println("Error marshalling data:", err)
-		JSONErrorResp(w, http.StatusInternalServerError, "Error marshalling data")
+		JSONErrorResp(w, http.StatusInternalServerError, "Помилка серіалізації даних")
 		return
 	}
 
@@ -139,7 +137,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Post(pyURL, "application/json", data_reader)
 	if err != nil {
 		log.Printf("Error posting data to python server at %s: %v\n", pyURL, err)
-		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
+		JSONErrorResp(w, http.StatusInternalServerError, "Внутрішня помилка під час відправки даних")
 		return
 	}
 
@@ -147,7 +145,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Println("Error posting data to python server:", resp.StatusCode)
-		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
+		JSONErrorResp(w, http.StatusInternalServerError, "Внутрішня помилка під час відправки даних")
 		return
 	}
 
@@ -156,7 +154,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Error reading response from python server:", err)
-		JSONErrorResp(w, http.StatusInternalServerError, "Error reading response")
+		JSONErrorResp(w, http.StatusInternalServerError, "Внутрішня помилка під час відправки даних")
 		return
 	}
 
