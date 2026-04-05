@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -28,7 +29,21 @@ func enableCors(next http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}
 		} else {
-			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+			origins := strings.Split(allowedOrigin, ",")
+			isAllowed := false
+			for _, o := range origins {
+				if strings.TrimSpace(o) == origin {
+					isAllowed = true
+					break
+				}
+			}
+			if isAllowed {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				// Fallback to the first origin or keep it as is if not matched
+				// browsers will block if it doesn't match
+				w.Header().Set("Access-Control-Allow-Origin", strings.TrimSpace(origins[0]))
+			}
 		}
 
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
@@ -121,7 +136,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	if err := godotenv.Load("ports.env", ".env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Println("No env file found, using default port 8080")
 	}
 

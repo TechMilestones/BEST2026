@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pryamcem/go-dataflash"
+	dataflash "github.com/pryamcem/go-dataflash"
 )
 
 type GPSData struct {

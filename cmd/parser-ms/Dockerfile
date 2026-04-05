@@ -7,8 +7,6 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Copy the dependency directory
-COPY go-dataflash/ ./go-dataflash/
-
 # Pre-download modules using cache mount
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
