@@ -1,9 +1,8 @@
 .visual-page {
-    padding: 10px 0 50px 0;
-
+    padding: 10px 0 20px 0;
     font-family: "Inter", sans-serif;
     text-align: left;
-    
+
     display: flex;
     flex-direction: column;
     row-gap: 10px;
@@ -14,47 +13,47 @@
     justify-content: space-between;
     align-items: center;
 
-    padding: 20px;
+    padding: 10px 20px;
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
     border-radius: 10px;
 }
 
-.visual-page_title {  
+.visual-page_title {
     font-size: 22px;
     font-weight: 700;
 }
+
 .visual-page_back-btn {
-    padding: 10px 15px;
-    
+    padding: 7px 12px;
     font-size: 16px;
     font-family: "Inter", sans-serif;
-    
     color: #fff;
-    background-color: rgb(73, 73, 73);
+    background-color: #2b3441;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
+    border: none;
 }
+
 .visual-page_back-btn:hover {
-    background-color: rgb(63, 63, 63);
-}
-
-.visual-page_list {
-    margin-top: 50px;
-
-    display: grid;
-    grid-template-columns: repeat(3, 33%);
-    gap: 10px;
+    background-color: #374151;
 }
 
 .visual-page_row {
     display: grid;
     gap: 10px;
+    align-items: stretch;
 }
+
 .visual-page_row.row-3d {
-    grid-template-columns: 59.3% 40%;
+    grid-template-columns: 3fr 2fr;
 }
+
+.visual-page_row.row-default {
+    grid-template-columns: 47fr 35fr 18fr;
+}
+
 .visual-page_col {
     display: grid;
     gap: 10px;
@@ -65,49 +64,65 @@
     background-color: rgba(75, 85, 99, 0.3);
     color: #fff;
     border-radius: 10px;
+    min-width: 0;
+    box-sizing: border-box;
 }
+.visual-page_item.item-3d {
+    padding: 20px 0 0;
+    
+}
+
 .visual-page_item.item-col {
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .visual-page_item_inner {
     display: grid;
-    gap: 10px 5px;
+    gap: 10px;
+    min-width: 0;
 }
+
 .visual-page_item_inner.one-col {
-    grid-template-columns: repeat(1, 100%);
+    grid-template-columns: 1fr;
 }
+
 .visual-page_item_inner.two-col {
-    grid-template-columns: repeat(2, 49%);
+    grid-template-columns: repeat(2, 1fr);
 }
+
 .visual-page_item_inner.three-col {
-    grid-template-columns: repeat(3, 33%);
+    grid-template-columns: repeat(3, 1fr);
 }
+
 .visual-page_item_inner.all-col {
-    grid-template-columns: repeat(6, 16%);
+    grid-template-columns: repeat(6, 1fr);
 }
 
 .visual-page_item_title {
     font-size: 22px;
     font-weight: 700;
     text-align: left;
-
     margin-bottom: 10px;
 }
+.visual-page_item_title.title-3d {
+    padding: 0 20px;
+}   
 
 .visual-page_item_value {
     font-family: "IBM Plex Mono", monospace;
     color: #999;
+    min-width: 0;
 }
+
 .visual-page_item_value p {
     font-family: "Inter", sans-serif;
     line-height: 1.1;
-
     margin-bottom: 7px;
 }
+
 .visual-page_item_value span {
     font-size: 34px;
     color: #fff;
 }
-

@@ -79,7 +79,7 @@ export default function DownloadPage() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        Drop file here or click to upload
+        Перетягніть файл або натисніть, щоб завантажити
       </div>
 
       <input

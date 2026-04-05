@@ -3,6 +3,7 @@ import './App.css'
 import DownloadPage from "./pages/DownloadPage/DownloadPage";
 import VisualizationPage from "./pages/VisualizationPage/VisualizationPage";
 import { VisualizationProvider } from "./context/VisualizationContext";
+import NotFoundPage from "./pages/NotFoundPage/NotFoundPage";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<DownloadPage />} />
           <Route path="/visual" element={<VisualizationPage />} />
+          <Route path="/*" element ={<NotFoundPage />}/>
         </Routes>
       </VisualizationProvider>
     </div>
