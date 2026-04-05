@@ -1,0 +1,26 @@
+@startuml UserInteraction
+skinparam shadowing false
+skinparam monochrome true
+
+actor User
+participant "Frontend (React/R3F)" as FE
+participant "Go Gateway (:8080)" as GO
+participant "Log Parser (Go)" as LP
+participant "Analysis Service (:8888)" as PY
+
+User -> FE : Selects .BIN file
+FE -> GO : POST /api/upload-log (multipart/form-data)
+GO -> LP : Stream .BIN for parsing
+LP -> LP : Filter: GPS, IMU, ATT
+LP -> GO : Return Normalized Data (JSON)
+
+GO -> PY : POST /api/process (JSON Arrays)
+note right of PY: 2nd Order Butterworth Filter\nTrapezoidal Integration
+PY -> PY : Calculate Metrics (v_x, v_z, climb, dist)
+PY -> GO : Return Processed Visualization Data & Metrics
+
+GO -> FE : HTTP 200 (JSON Response)
+FE -> FE : Update VisualizationContext
+FE -> User : Render 3D Scene & Dashboard
+
+@enduml

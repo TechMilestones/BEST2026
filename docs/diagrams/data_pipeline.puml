@@ -1,0 +1,38 @@
+@startuml DataPipeline
+skinparam shadowing false
+skinparam monochrome true
+allowmixing
+
+package "Frontend Layer (React)" {
+  component [3D Engine (R3F)] as Scene
+  component [Telemetry Dashboard] as Dash
+  interface "Visualization Context" as Context
+}
+
+package "Ingestion Layer (Go)" {
+  component [Gateway (cmd/parser-ms)] as Gateway
+  component [Log Parser (log-parser)] as Parser
+  note right of Parser : Ardupilot .BIN Decoding\nContribution: ISeeker Interface
+}
+
+package "Science Layer (Python)" {
+  component [Signal Processing] as DSP
+  component [Metrics Calculator] as Metrics
+  component [3D Data Prep] as Prep
+}
+
+User -down-> [.BIN File]
+[.BIN File] -down-> Gateway : HTTP POST
+Gateway -right-> Parser : Binary Stream
+Parser -left-> Gateway : Normalized JSON (GPS/IMU/ATT)
+
+Gateway -down-> DSP : JSON Arrays
+DSP -down-> Metrics : Velocity Estimation
+DSP -down-> Prep : Smoothed Orientation
+Prep -up-> Gateway : Visual Data + Metrics
+
+Gateway -up-> Context : Final Data Payload
+Context -up-> Scene : React State
+Context -up-> Dash : React State
+
+@enduml
