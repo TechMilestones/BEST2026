@@ -46,6 +46,11 @@ def final_calculations_for_3d(df_att, df_imu_0, df_imu_1, df_gps):
     df_gps_cleaned = get_cleaned_gps_dataframe(df_gps)
 
     df_gps_enu = get_enu_coordinates(df_gps_cleaned)
+    gps_start_time_us = None
+    if not df_gps_enu.empty and 'TimeUS' in df_gps_enu.columns:
+        gps_times = pd.to_numeric(df_gps_enu['TimeUS'], errors='coerce').dropna()
+        if not gps_times.empty:
+            gps_start_time_us = float(gps_times.min())
     print(df_gps_cleaned.head())
 
 
@@ -68,6 +73,17 @@ def final_calculations_for_3d(df_att, df_imu_0, df_imu_1, df_gps):
         on='TimeUS',
         direction='nearest'
     )
+
+    # IMU often starts earlier than GPS. Drop pre-GPS samples so velocity and
+    # coordinates stay time-aligned and the trajectory does not freeze at origin.
+    if gps_start_time_us is not None:
+        before_sync_count = len(visualization_df)
+        visualization_df = visualization_df[
+            visualization_df['TimeUS'] >= gps_start_time_us
+        ].reset_index(drop=True)
+        dropped_count = before_sync_count - len(visualization_df)
+        if dropped_count > 0:
+            print(f"[SYNC] Dropped {dropped_count} pre-GPS samples (before TimeUS={int(gps_start_time_us)}).")
 
     # Interpolate GPS coordinates in Cartesian (ENU) space on the
     # visualization timestamps. We build a union index of GPS times and
