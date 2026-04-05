@@ -2,7 +2,7 @@ import { useVisualizationContext } from "../../context/VisualizationContext";
 import "./DownloadPage.css";
 import { useNavigate } from "react-router-dom";
 
-const logApiUrl = import.meta.env.VITE_API_URL;
+const logApiUrl = import.meta.env.VITE_API_URL || "";
 
 export default function DownloadPage() {
   const { setFlightData, setMetrics } = useVisualizationContext();

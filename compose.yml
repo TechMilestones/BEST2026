@@ -8,14 +8,14 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       - PORT=3000
+      - ABSENT_TERMINAL=/index.html
 
   # The Python microservice (Calculations)
   python-server:
     build:
       context: ./python-server
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:8888:8888"
+    # Internal port 8888, exposed only to the network
     volumes:
       - ./data:/app/data
       - ./python-server/src/parser-data:/app/parser-data
@@ -26,5 +26,9 @@ services:
       dockerfile: cmd/parser-ms/Dockerfile
     ports:
       - "127.0.0.1:8080:8080"
+    environment:
+      - CORS_ALLOW_ORIGIN=*
+      - PYTHON_SERVICE_HOST=python-server
+      - PYTHON_SERVICE_PORT=8888
     volumes:
       - ./data:/app/data

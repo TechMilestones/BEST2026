@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import React, { useMemo } from 'react'
-import { useLoader, useFrame } from '@react-three/fiber'
+import { useLoader } from '@react-three/fiber'
 import { OBJLoader } from 'three-stdlib'
 import { Html, useProgress } from '@react-three/drei'
 

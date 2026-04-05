@@ -18,9 +18,21 @@ import (
 
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", os.Getenv("CORS_ALLOW_ORIGIN"))
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
+		allowedOrigin := os.Getenv("CORS_ALLOW_ORIGIN")
+		origin := r.Header.Get("Origin")
+
+		if allowedOrigin == "" || allowedOrigin == "*" {
+			if origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			}
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		}
+
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
@@ -30,7 +42,6 @@ func enableCors(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +60,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
+		log.Println("Error reading file:", err)
 		JSONErrorResp(w, http.StatusBadRequest, "Error reading file")
 		return
 	}
@@ -57,6 +69,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	// not the best practice but it should works
 	data, err := logparser.Parse(f)
 	if err != nil {
+		log.Println("Error parsing log:", err)
 		JSONErrorResp(w, http.StatusInternalServerError, "Error parsing log")
 		return
 	}
@@ -65,20 +78,31 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	data_reader := bytes.NewReader(data_str)
 
+	pyhost := os.Getenv("PYTHON_SERVICE_HOST")
+	if pyhost == "" {
+		pyhost = "localhost"
+	}
+
 	pyport := os.Getenv("PYTHON_SERVICE_PORT")
 	if pyport == "" {
 		pyport = "8888"
 	}
 
+	pyURL := fmt.Sprintf("http://%s:%s/api/process", pyhost, pyport)
+	fmt.Println("Sending data to python server at", pyURL)
+
 	// Call to python server to get full data
-	// later there will be env for this
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%s/api/process", pyport), "application/json", data_reader)
+	resp, err := http.Post(pyURL, "application/json", data_reader)
 	if err != nil {
+		log.Printf("Error posting data to python server at %s: %v\n", pyURL, err)
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
 	}
 
+	fmt.Println("Response status code:", resp.StatusCode)
+
 	if resp.StatusCode != http.StatusOK {
+		log.Println("Error posting data to python server:", resp.StatusCode)
 		JSONErrorResp(w, http.StatusInternalServerError, "Error posting data")
 		return
 	}
@@ -87,6 +111,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Println("Error reading response from python server:", err)
 		JSONErrorResp(w, http.StatusInternalServerError, "Error reading response")
 		return
 	}
