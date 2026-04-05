@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { getStoredValue, setStoredValue } from "../utils/indexedDbStorage";
 
 export interface FlightData {
     TimeUS: number
@@ -86,24 +87,24 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
     const getLatestTelemetry = useCallback(() => telemetryRef.current, [])
 
     useEffect(() => {
-        const visualization_serial = sessionStorage.getItem("visualization_data")
-        if (visualization_serial) {
-            try {
-                const visualization_data = JSON.parse(visualization_serial) as FlightData[]
-                _setFlightData(visualization_data)
-            } catch (e) {
-                console.error("Failed to parse visualization_data from sessionStorage", e)
+        let isMounted = true
+
+        const loadStoredData = async () => {
+            const visualizationData = await getStoredValue<FlightData[]>("visualization_data")
+            if (isMounted && Array.isArray(visualizationData)) {
+                _setFlightData(visualizationData)
+            }
+
+            const metricsData = await getStoredValue<FlightMetrics>("flight_metrics")
+            if (isMounted && metricsData) {
+                _setMetrics(metricsData)
             }
         }
 
-        const metrics_serial = sessionStorage.getItem("flight_metrics")
-        if (metrics_serial) {
-            try {
-                const metrics_data = JSON.parse(metrics_serial) as FlightMetrics
-                _setMetrics(metrics_data)
-            } catch (e) {
-                console.error("Failed to parse flight_metrics from sessionStorage", e)
-            }
+        void loadStoredData()
+
+        return () => {
+            isMounted = false
         }
     }, [])
 
@@ -123,7 +124,7 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
             lon: item.lon != null ? Number(item.lon) : undefined,
         }));
         _setFlightData(sanitizedData)
-        sessionStorage.setItem("visualization_data", JSON.stringify(sanitizedData))
+        void setStoredValue("visualization_data", sanitizedData)
     }, [])
 
     const setMetrics = useCallback((m: FlightMetrics) => {
@@ -136,7 +137,7 @@ export function VisualizationProvider({ children }: { children: React.ReactNode 
             duration_s: Number(m.duration_s),
         } as FlightMetrics;
         _setMetrics(sanitizedMetrics)
-        sessionStorage.setItem("flight_metrics", JSON.stringify(sanitizedMetrics))
+        void setStoredValue("flight_metrics", sanitizedMetrics)
     }, [])
 
     const contextValue = useMemo(() => ({

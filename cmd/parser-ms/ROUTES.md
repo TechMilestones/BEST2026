@@ -8,6 +8,8 @@ Returns a 200 status code if the server is running and a `OK` message.
 
 Receives a FC flight log file from the frontend and parses it.
 
+Max upload size: 100 MiB.
+
 **Request Body**
 
 | Name | Type | Required | Description |
