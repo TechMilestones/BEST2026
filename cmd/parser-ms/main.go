@@ -70,8 +70,20 @@ func JSONErrorResp(w http.ResponseWriter, status int, err_msg string) {
 }
 
 func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
-	// Set the maximum size of the request body to 10 MiB
-	r.ParseMultipartForm(10 << 20)
+	const maxUploadSize = 100 << 20 // 100 MiB
+
+	// Hard-limit upload body size to avoid unbounded memory/disk usage.
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		if strings.Contains(err.Error(), "http: request body too large") {
+			JSONErrorResp(w, http.StatusRequestEntityTooLarge, "File is too large. Max upload size is 100 MiB")
+			return
+		}
+
+		log.Println("Error parsing multipart form:", err)
+		JSONErrorResp(w, http.StatusBadRequest, "Invalid multipart form data")
+		return
+	}
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
