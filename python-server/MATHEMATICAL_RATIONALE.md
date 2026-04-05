@@ -127,7 +127,6 @@ Why:
 - it is more accurate than explicit Euler on non-uniform time steps;
 - it is simple and computationally efficient for streaming telemetry.
 
-Additionally, invalid time steps are rejected (`\Delta t <= 0` or `\Delta t > 0.5s`) to protect against corrupted timestamps.
 
 ## 7. Why `merge_asof` and Time Interpolation Are Used
 
