@@ -15,9 +15,6 @@ services:
       context: ./python-server
       dockerfile: Dockerfile
     # Internal port 8888, exposed only to the network
-    volumes:
-      - ./data:/app/data
-      - ./python-server/src/parser-data:/app/parser-data
 
   # The Go microservice (API / Routes)
   parser-ms:
@@ -30,5 +27,3 @@ services:
       - CORS_ALLOW_ORIGIN=*
       - PYTHON_SERVICE_HOST=python-server
       - PYTHON_SERVICE_PORT=8888
-    volumes:
-      - ./data:/app/data
