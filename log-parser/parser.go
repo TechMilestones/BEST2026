@@ -58,6 +58,9 @@ func Parse(r io.ReadSeeker) (*LogData, error) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			}
+			if err.Error() == "failed to decode message" {
+				return nil, err
+			}
 			continue
 		}
 

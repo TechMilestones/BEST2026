@@ -101,7 +101,18 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(data.GPS) == 0 && len(data.IMU) == 0 && len(data.ATT) == 0 {
+		log.Println("No data found in log")
+		JSONErrorResp(w, http.StatusUnprocessableEntity, "No data found in log or incorrect log format")
+		return
+	}
+
 	data_str, err := json.Marshal(&data)
+	if err != nil {
+		log.Println("Error marshalling data:", err)
+		JSONErrorResp(w, http.StatusInternalServerError, "Error marshalling data")
+		return
+	}
 
 	data_reader := bytes.NewReader(data_str)
 
@@ -116,7 +127,7 @@ func uploadLogHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pyURL := fmt.Sprintf("http://%s:%s/api/process", pyhost, pyport)
-	fmt.Println("Sending data to python server at", pyURL)
+	log.Println("Sending data to python server at", pyURL)
 
 	// Call to python server to get full data
 	resp, err := http.Post(pyURL, "application/json", data_reader)
@@ -159,7 +170,7 @@ func main() {
 
 	port := os.Getenv("GO_SERVICE_PORT")
 	if port == "" {
-		port = "8080"
+		port = "5000"
 	}
 	server := &http.Server{
 		Addr:    ":" + port,
