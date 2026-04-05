@@ -25,7 +25,7 @@ services:
     build:
       dockerfile: cmd/parser-ms/Dockerfile
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:5000:8080"
     environment:
       - CORS_ALLOW_ORIGIN=*
       - PYTHON_SERVICE_HOST=python-server

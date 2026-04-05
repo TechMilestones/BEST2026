@@ -1,0 +1,22 @@
+# General ignores for JSON/TXT
+*.json
+*.txt
+
+# Essential exceptions for build
+!package.json
+!package-lock.json
+!tsconfig*.json
+
+# Build and node_modules
+node_modules
+dist
+# .env
+# .env.*
+
+# Logs and system
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.vscode
+.idea

@@ -1,0 +1,29 @@
+# General ignores for JSON/TXT
+*.json
+*.txt
+
+# Essential exceptions for Python build
+!requirements.txt
+
+# Python environment and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+.env
+.env.*
+
+# Documentation and Git
+*.md
+.git/
+.gitignore
+README.md
+Dockerfile
+
+# System
+.DS_Store
+.vscode
+.idea

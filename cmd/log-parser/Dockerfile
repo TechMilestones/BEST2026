@@ -3,19 +3,32 @@ FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-COPY ./go-dataflash/ ./go-dataflash/
-
-# Download dependencies first (cached layer)
+# Copy dependency manifests
 COPY go.mod go.sum ./
-RUN go mod download
 
-# Copy source and build
+# Copy the dependency directory
+COPY go-dataflash/ ./go-dataflash/
+
+# Pre-download modules using cache mount
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# Copy the entire source
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/parser ./cmd/log-parser
 
-# Stage 2: Run
+# Build the binary using cache mounts for build and module cache
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/parser ./cmd/log-parser
+
+# Stage 2: Final Image
 FROM alpine:3.21
 
+# Install certificates and update
+RUN apk --no-cache add ca-certificates && \
+    update-ca-certificates
+
+# Copy the binary from the builder
 COPY --from=builder /app/parser /usr/local/bin/parser
 
 WORKDIR /out

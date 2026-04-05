@@ -1,0 +1,40 @@
+# Ignore all JSON and TXT by default to exclude large data files
+**/*.json
+**/*.txt
+
+# Exceptions for critical build and config files
+!**/package.json
+!**/package-lock.json
+!**/requirements.txt
+!**/go.mod
+!**/go.sum
+!**/tsconfig*.json
+
+# Data and documentation
+data/
+docs/
+**/*.md
+**/*.zip
+
+# Git
+.git/
+.gitignore
+
+# Frontend local files
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+
+# Python local files
+python-server/.venv/
+python-server/__pycache__/
+python-server/*.py[cod]
+
+# Go local files
+**/bin/
+**/obj/
+
+# Docker
+**/Dockerfile
+**/compose.yml
+.dockerignore

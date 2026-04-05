@@ -2,16 +2,25 @@
 FROM node:22-alpine AS build
 
 WORKDIR /app
+
+# Copy package manifests
 COPY package*.json ./
-RUN npm install
+
+# Install dependencies using cache mount and npm ci for faster/reproducible builds
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN npm run build
 
-# Final stage: Serve static files
+# Final stage: Serve static files using a lightweight server
 FROM halverneus/static-file-server:latest
 COPY --from=build /app/dist /web
-# The default port for this image is 8080, but we can configure it
+
+# Configuration for static file server
 ENV PORT=3000
-# SPA fallback: handle all non-existent paths by serving index.html
 ENV ABSENT_TERMINAL=/index.html
 EXPOSE 3000
