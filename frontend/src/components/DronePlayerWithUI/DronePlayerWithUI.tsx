@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, useRef } from 'react'
+import { useState, useEffect, Suspense, useRef, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -26,6 +26,7 @@ export default function DronePlayerWithUI({
   const animationTimeRef = useRef<number>(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isCameraLocked, setIsCameraLocked] = useState(true)
+  const [isSatelliteMapEnabled, setIsSatelliteMapEnabled] = useState(true)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -36,6 +37,17 @@ export default function DronePlayerWithUI({
       animationTimeRef.current = flightData[0].TimeUS
     }
   }, [flightData])
+
+  const hasGeoData = useMemo(
+    () => (flightData ?? []).some(
+      (point) =>
+        typeof point.lat === 'number' &&
+        Number.isFinite(point.lat) &&
+        typeof point.lon === 'number' &&
+        Number.isFinite(point.lon)
+    ),
+    [flightData]
+  )
 
   const hasData = !!(flightData && flightData.length > 0)
 
@@ -62,6 +74,7 @@ export default function DronePlayerWithUI({
               animationTimeRef={animationTimeRef}
               objUrl={objUrl}
               textureUrl={textureUrl}
+              showSatelliteMap={isSatelliteMapEnabled && hasGeoData}
               onTelemetry={onTelemetry}
             />
           )}
@@ -88,6 +101,9 @@ export default function DronePlayerWithUI({
           setIsCameraLocked={setIsCameraLocked}
           playbackSpeed={playbackSpeed}
           setPlaybackSpeed={setPlaybackSpeed}
+          isSatelliteMapEnabled={isSatelliteMapEnabled && hasGeoData}
+          setIsSatelliteMapEnabled={setIsSatelliteMapEnabled}
+          canUseSatelliteMap={hasGeoData}
           animationTimeRef={animationTimeRef}
         />
       )}

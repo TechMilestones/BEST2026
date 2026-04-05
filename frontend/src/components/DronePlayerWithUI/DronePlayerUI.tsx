@@ -1,5 +1,6 @@
 import React from 'react'
 import { type FlightData } from '../../context/VisualizationContext'
+import { MapLayerToggle } from './MapLayerToggle'
 // --- Colors ---
 const COLORS = {
   panel: '#171A1E',
@@ -118,6 +119,9 @@ interface DronePlayerUIProps {
   setIsCameraLocked: (locked: boolean) => void
   playbackSpeed: number
   setPlaybackSpeed: (speed: number) => void
+  isSatelliteMapEnabled: boolean
+  setIsSatelliteMapEnabled: (enabled: boolean) => void
+  canUseSatelliteMap: boolean
   animationTimeRef: React.MutableRefObject<number>
 }
 
@@ -131,6 +135,9 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
   setIsCameraLocked,
   playbackSpeed,
   setPlaybackSpeed,
+  isSatelliteMapEnabled,
+  setIsSatelliteMapEnabled,
+  canUseSatelliteMap,
   animationTimeRef,
 }) => {
   return (
@@ -150,6 +157,12 @@ export const DronePlayerUI: React.FC<DronePlayerUIProps> = ({
             }
           }}
           style={{ ...sliderStyle, marginBottom: '12px' }}
+        />
+
+        <MapLayerToggle
+          checked={isSatelliteMapEnabled}
+          disabled={!canUseSatelliteMap}
+          onChange={setIsSatelliteMapEnabled}
         />
       </div>
 
