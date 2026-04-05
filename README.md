@@ -1,5 +1,7 @@
 # Telemetry Analysis System and 3D Visualization of UAV Flight Logs
 
+![log seeking](./visual.gif "Flight demonstration")
+
 ---
 
 ## Introduction
