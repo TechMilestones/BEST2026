@@ -93,23 +93,35 @@ The system uses environment variables to maintain decoupling between the polyglo
 
 ## Architecture
 
-We chose a polyglot stack to develop a working prototype as quickly as possible.The system operates as an interactive web application where users can upload a log file and immediately view the results. 
+The system operates as an interactive web application where users can upload a log file and immediately view the results. 
 
-Go manages the high-performance ingestion of binary Ardupilot log files. It parses the telemetry, extracts GPS and IMU sensor messages, identifies sampling frequencies, and constructs structured data arrays. 
+We chose a polyglot stack for this application due to 2 main reasons:
+ - to develop a working prototype as quickly as possible using best fiting technologies.
+ - let every developer contribute to the project as conveniently as possible.
 
-Python acts as the core analytics engine. It computes the final mission metrics directly from the log file. These metrics include maximum horizontal and vertical speed, maximum acceleration, maximum altitude gain, and total flight duration.
+**Go** manages the high-performance processing of binary Ardupilot log files. It parses the telemetry, extracts GPS and IMU sensor messages, identifies sampling frequencies, and constructs structured data arrays. 
 
-React and Three.js power the 3D visualization dashboard. We use a HashRouter to ensure universal static compatibility across any file server. We strictly adhere to a no-data-collection policy, ensuring uploaded files are not stored on our servers.
+**Python** acts as the core analytics engine. It computes the final mission metrics directly from the structured data recieved from go parser. These metrics include maximum horizontal and vertical speed, maximum acceleration, maximum altitude gain, and total flight duration.
+
+**React and Three.js** power the 3D visualization dashboard. We use a HashRouter to ensure universal static compatibility across any file server. We strictly adhere to a no-data-collection policy, ensuring uploaded files are not stored on our servers.
 
 ---
 
 ## Mathematical & Scientific Foundations
 
-The application builds an interactive tool to review the drone's spatial trajectory in 3D. The system mathematically converts global WGS-84 coordinates into a local Cartesian ENU system. The resulting 3D graph plots height on the third axis and dynamically colors the trajectory based on flight speed or elapsed time.
+To ensure the 3D visualization accurately reflects physical reality, the Science Layer (Python) is grounded in several core mathematical concepts and strict SI unit consistency. 
 
-We guarantee kinematic accuracy through strict algorithmic implementations. The total traversed distance is calculated exclusively using the haversine formula. We derive velocity metrics from the acceleration arrays using trapezoidal integration. 
+**Geodetic Calculations (Haversine & ENU Projection)**
+To estimate the traveled distance between GPS points, we utilize the Haversine formula based on a spherical Earth model with a radius of 6,371,000 meters. This trigonometric approach provides superior numerical stability over Euclidean distance for short to medium ranges.
+For the 3D rendering, we project these global WGS-84 coordinates into a local Cartesian ENU (East-North-Up) system. This local tangent-plane approximation maps longitude and latitude differences directly into meters relative to the launch point, avoiding the computationally heavy full ECEF conversion while remaining highly accurate for kilometer-scale trajectories.
 
-To handle the inherent motor vibration noise in UAV telemetry, we apply a 2nd-order Butterworth low-pass filter to the IMU data. We explicitly use quaternions for orientation instead of Euler angles to avoid gimbal lock. We also implement baseline bias removal to explain and compensate for double-integration errors.
+**Signal Conditioning & Orientation**
+UAV telemetry is inherently noisy. We merge data from dual IMUs by averaging them to reduce random noise before applying a 2nd-order Butterworth low-pass filter with a 4 Hz cutoff. This specific filter offers smooth passband behavior, mitigating the high-frequency vibration noise that would otherwise cause "random walk" drift during acceleration integration. For spatial orientation, we rely entirely on quaternions rather than Euler angles. Quaternions provide superior numerical stability, cleaner interpolation, and mathematically prevent gimbal lock during intermediate frame conversions.
+
+**Velocity Estimation via Trapezoidal Integration**
+Once the filtered acceleration is rotated into the Earth frame, we apply a strict gravity vector compensation of 9.80665 m/s² and subtract the initial startup bias. To estimate velocity, we utilize the trapezoidal rule for numerical integration. This method is mathematically more robust than explicit Euler integration across non-uniform time steps and maintains computational efficiency for streaming telemetry.
+
+For a deeper dive into the specific formulas, algorithmic thresholds, and physical assumptions used in our pipeline, please refer to our [Detailed Mathematical Rationale](./python-server/MATHEMATICAL_RATIONALE.md).
 
 ---
 
