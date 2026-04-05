@@ -1,0 +1,44 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="110" fill="#1A1E21"/>
+
+  <defs>
+    <linearGradient id="lineGrad" x1="100" y1="380" x2="412" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5EEAD4"/>
+      <stop offset="1" stop-color="#60A5FA"/>
+    </linearGradient>
+  </defs>
+
+  <!-- bigger container -->
+  <rect x="32" y="32" width="448" height="448" rx="70" fill="#1E232A"/>
+
+  <!-- grid -->
+  <g stroke="#2A3038" stroke-width="3">
+    <line x1="80" y1="360" x2="432" y2="360"/>
+    <line x1="80" y1="280" x2="432" y2="280"/>
+    <line x1="80" y1="200" x2="432" y2="200"/>
+    <line x1="80" y1="120" x2="432" y2="120"/>
+  </g>
+
+  <!-- chart line -->
+  <path 
+    d="M100 340 
+       L180 270 
+       L260 300 
+       L340 210 
+       L420 150" 
+    fill="none" 
+    stroke="url(#lineGrad)" 
+    stroke-width="18" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  />
+
+  <!-- points -->
+  <g fill="#E6F1FF">
+    <circle cx="100" cy="340" r="8"/>
+    <circle cx="180" cy="270" r="8"/>
+    <circle cx="260" cy="300" r="8"/>
+    <circle cx="340" cy="210" r="8"/>
+    <circle cx="420" cy="150" r="8"/>
+  </g>
+</svg>
