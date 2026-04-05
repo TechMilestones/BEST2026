@@ -4,25 +4,21 @@
 
 ## Introduction
 
-In modern unmanned aviation, the ability to analyze flight data in detail is critical for ensuring safety, optimizing performance, and diagnosing systems. Beyond civilian applications, drones have also become a staple of modern warfare, making tools for sensor data analysis even more vital. This project is dedicated to developing tools for processing, analyzing, and visualizing telemetry received from unmanned aerial vehicles
+In modern unmanned aviation, the ability to analyze flight data in detail is critical for ensuring safety, optimizing performance, and diagnosing systems. Beyond civilian applications, drones have also become a staple of modern warfare, making tools for sensor data analysis even more vital. This project is dedicated to developing tools for processing, analyzing, and visualizing telemetry received from unmanned aerial vehicles.
 
 ---
 
 ## Setup
 
-This project offerst docker-compose setup but for enthusiasts
-there is also a manual setup.
-
+This project offers a Docker Compose setup. For enthusiasts, there is also a manual setup available.
 
 ### Docker Setup
 
 **Prerequisites**
+* Docker
+* Docker Compose
 
-- Docker
-- Docker Compose
-
-**Setup**
-
+**Steps**
 1. **Clone the repository**
    ```bash
    git clone https://github.com/TechMilestones/BEST2026.git
@@ -38,19 +34,16 @@ there is also a manual setup.
    ```
 
 **Usage**
-
-The dashboard is available at `http://localhost:3000`.
+The interactive web dashboard is available at `http://localhost:3000`.
 
 ### Manual Setup
 
 **Prerequisites**
+* Go 1.25+
+* Python 3.10+
+* Node.js 22+
 
-- Go 1.25+
-- Python 3.10+
-- Node.js 22+
-
-**Setup**
-
+**Steps**
 1. **Clone the repository**
    ```bash
    git clone https://github.com/TechMilestones/BEST2026.git
@@ -82,97 +75,53 @@ The dashboard is available at `http://localhost:3000`.
    python3 server.py
    ```
 
-
-**Usage**
-
-The server is available at `http://localhost:3000`.
-
-
 ---
 
 ## Environment Configuration
 
 The system uses environment variables to maintain decoupling between the polyglot services.
 
-### Core Variables
-
-| Variable | Depending Services | Default | Description |
+| Variable | Services | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `GO_SERVICE_PORT` | Parser | `5000` | The internal port the Go gateway listens on. |
-| `PYTHON_SERVICE_HOST` | Parser | `localhost` | The hostname of the Python analysis service. |
-| `PYTHON_SERVICE_PORT` | Parser, Python | `8888` | The port for communication between Go and Python. |
+| `GO_SERVICE_PORT` | Parser | `5000` | Internal port the Go gateway listens on. |
+| `PYTHON_SERVICE_HOST` | Parser | `localhost` | Hostname of the Python analysis service. |
+| `PYTHON_SERVICE_PORT` | Parser, Python | `8888` | Port for Go-Python communication. |
 | `CORS_ALLOW_ORIGIN` | Parser | `*` | Security policy for allowed frontend domains. |
-| `VITE_API_URL` | Frontend | `http://localhost:5000` | The URL of the Go Gateway used by the React client. |
-
-### Setup Steps for Correctness
-
-1. **Service Discovery:** Ensure `PYTHON_SERVICE_HOST` is set correctly. 
-   - **In Docker:** It must match the service name in `compose.yml` (e.g., `python-server`).
-   - **Manual Setup:** Set it to `localhost` if both services are running on the same machine.
-
-2. **Frontend-Gateway Link:** The `VITE_API_URL` in the frontend must point to the *exposed* port of the Go service. If you are running Docker with the custom port configuration in `compose.yml`, pay close attention to it.
-
-3. **CORS Configuration:** In a production environment, change `CORS_ALLOW_ORIGIN` from `*` to your specific frontend domain to prevent unauthorized API access.
+| `VITE_API_URL` | Frontend | `http://localhost:5000` | URL of the Go Gateway used by the React client. |
 
 ---
 
 ## Architecture
 
-The system is architected as a **Polyglot Data Pipeline**, prioritizing specialized toolchains to maximize performance and numerical integrity at each processing stage.
+We chose a polyglot stack to develop a working prototype as quickly as possible.The system operates as an interactive web application where users can upload a log file and immediately view the results. 
 
-### 1. High-Performance Ingestion & Normalization (Go)
-   Go was selected to handle the binary log ingestion and initial parsing layer.
-   Go's efficient I/O primitives ensures high-throughput processing of large `.BIN` files. This service acts as an **Anti-Corruption Layer**, decoupling the raw Ardupilot DataFlash format from the rest of the stack by normalizing telemetry into a stable JSON-serializable structure.
-   Rather than writing out own binary parsing solution, we utilized and extended existing tooling (`go-dataflash`) by contributing a standardized interface, ensuring a robust and community-aligned foundation.
+Go manages the high-performance ingestion of binary Ardupilot log files. It parses the telemetry, extracts GPS and IMU sensor messages, identifies sampling frequencies, and constructs structured data arrays. 
 
-### 2. Numerical Analysis & Sensor Fusion (Python)
-   A dedicated Python service manages all telemetry calculations using the NumPy/SciPy stack.
-   Telemetry visualization requires more than simple interpolation. We implemented a **Signal Processing Pipeline** featuring a 2nd-order Butterworth low-pass filter to mitigate IMU noise and trapezoidal integration for velocity estimation. This ensures the visualization reflects physical flight dynamics rather than raw sensor jitter.
+Python acts as the core analytics engine. It computes the final mission metrics directly from the log file. These metrics include maximum horizontal and vertical speed, maximum acceleration, maximum altitude gain, and total flight duration.
 
-### 3. Declarative 3D Visualization (React & Three.js)
-*   **Decision:** The frontend utilizes React Three Fiber (R3F) for the 3D rendering engine, using **HashRouter** for client-side navigation.
-*   **Rationale:** We opted for `HashRouter` to ensure **Universal Static Compatibility**. By moving the routing state to the URL hash, the application becomes completely agnostic to the server-side configuration. This guarantees that deep-linking and browser reloads work reliably on any static file server (e.g., lightweight Go servers, Nginx, or GitHub Pages) without requiring `try_files` or rewrite rules.
-
-
-### 4. Strict No Data Collection Policy
-   The project does not collect any data from the user other than the uploaded `.BIN` file and doesn't even store it on the server.
-   Current global privacy landscape is concerning enough, so we decided to honour users rights privacy and not collect any data.
+React and Three.js power the 3D visualization dashboard. We use a HashRouter to ensure universal static compatibility across any file server. We strictly adhere to a no-data-collection policy, ensuring uploaded files are not stored on our servers.
 
 ---
 
-## 5. Mathematical & Scientific Foundations
+## Mathematical & Scientific Foundations
 
-To ensure the 3D visualization accurately reflects physical reality rather than raw sensor noise, the **Science Layer (Python)** implements several critical algorithms:
+The application builds an interactive tool to review the drone's spatial trajectory in 3D. The system mathematically converts global WGS-84 coordinates into a local Cartesian ENU system. The resulting 3D graph plots height on the third axis and dynamically colors the trajectory based on flight speed or elapsed time.
 
-### Signal Conditioning (Butterworth Filter)
-UAV telemetry is inherently noisy due to motor vibrations. We apply a **2nd-order Butterworth low-pass filter** with a normalized cutoff frequency derived from the estimated sampling rate.
-*   **Purpose:** Mitigates high-frequency noise in the Accelerometer data before integration.
-*   **Impact:** Prevents "random walk" drift in velocity estimations.
+We guarantee kinematic accuracy through strict algorithmic implementations. The total traversed distance is calculated exclusively using the haversine formula. We derive velocity metrics from the acceleration arrays using trapezoidal integration. 
 
-### Velocity Estimation (Trapezoidal Integration)
-Velocity is derived by integrating filtered linear acceleration across the Earth frame (rotated via attitude quaternions).
-*   **Algorithm:** Trapezoidal rule integration on non-uniform time steps.
-*   **Correction:** We apply a gravity vector compensation (9.80665 m/s²) and a baseline bias removal based on the first 50 samples of the flight.
-
-### Geodetic Calculations (Haversine Formula)
-Total flight distance is calculated using the **Haversine formula**, accounting for the Earth's curvature.
-*   **Accuracy:** Superior to Euclidean distance for GPS coordinates, providing sub-meter accuracy over the flight trajectory.
+To handle the inherent motor vibration noise in UAV telemetry, we apply a 2nd-order Butterworth low-pass filter to the IMU data. We explicitly use quaternions for orientation instead of Euler angles to avoid gimbal lock. We also implement baseline bias removal to explain and compensate for double-integration errors.
 
 ---
 
-## 6. Feature Roadmap (Phase 2)
+## Feature Roadmap (Phase 2)
 
-While the current architecture provides a robust Proof of Value, the following strategic upgrades are planned for production hardening:
+While the current architecture provides a working prototype, we have several strategic upgrades:
 
-1.  **Strict Data Contracts (Protobufs):** Transitioning from JSON to Protocol Buffers to enforce strict schema validation across Go, Python, and TypeScript, eliminating manual field synchronization.
-2.  **Advanced Sensor Fusion (EKF):** Implementation of an **Extended Kalman Filter** in the Science Layer to fuse GPS and IMU data more tightly, providing better state estimation during signal loss.
-3.  **Real-time Streaming:** Leveraging the Go Gateway's concurrency model to support real-time telemetry streaming via WebSockets, in addition to batch file processing.
-4.  **Harden Parser Integration:** Replacing unchecked type assertions in the Go parsing layer with a robust validation middleware to handle malformed binary logs gracefully.
+* **Strict Data Contracts:** Transitioning to Protocol Buffers for strict schema validation.
+* **Advanced Sensor Fusion:** Implementing an Extended Kalman Filter (EKF) for tighter GPS and IMU data fusion.
 
 ---
 
-## 7. Diagrams
+## Diagrams
 
 Visual documentation of the system architecture can be found in `docs/diagrams/`.
-There are also images of the diagrams rendered in the `docs/diagrams/` directory under the same name as original `.puml` files.
-
