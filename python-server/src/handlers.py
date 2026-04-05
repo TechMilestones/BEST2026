@@ -141,6 +141,9 @@ def dataframe_to_json_records(df):
         "x_m",
         "y_m",
         "z_m",
+        "alt_msl",
+        "lat",
+        "lon",
     ]
 
     existing_columns = [col for col in ordered_columns if col in df.columns]
